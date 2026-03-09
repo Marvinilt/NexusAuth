@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String?
+  mfaEnabled     Boolean         @default(false)
+  mfaSecret      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  oauthProviders OAuthProvider[]
+  backupCodes    BackupCode[]
+
+  @@map("users")
+}
+
+model OAuthProvider {
+  id         String   @id @default(uuid())
+  provider   Provider
+  providerId String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@map("oauth_providers")
+}
+
+model BackupCode {
+  id        String   @id @default(uuid())
+  codeHash  String
+  used      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("backup_codes")
+}
+
+enum Provider {
+  GOOGLE
+  FACEBOOK
+}
