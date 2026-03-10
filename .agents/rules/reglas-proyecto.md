@@ -18,11 +18,11 @@ trigger: always_on
 3. Inicia el desarrollo de la funcionalidad.
 
 ### Al Finalizar el desarrollo de una funcionalidad
-1. Cuando el usuario indique que ha finalizado el desarrollo realiza estas acciones:
-    a. Actualiza `README.md` (instrucciones, fecha y descripción de feature).
-    b. Actualiza `docs/DocumentacionTecnica.md` (arquitectura, endpoints, diseño, fecha).
-    c. Realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
-    d. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
+Cuando el usuario indique que ha finalizado el desarrollo realiza las siguientes acciones:
+    1. Actualiza `README.md` (instrucciones, fecha y descripción de funcionalidades).
+    2. Actualiza `docs/DocumentacionTecnica.md` (arquitectura, diagrama de arquitectura, diagrama de comunicación entre componentes, documentación de endpoints, diseño, librerias necesarias, requisitos técnicos).
+    3. Realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
+    4. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
 
 ## 3. Reglas de desarrollo  
 1. **Documentación de Código:** Todos los métodos, funciones y clases deben contar con documentación (JSDoc, Docstrings) que explique su propósito, parámetros y valores de retorno.

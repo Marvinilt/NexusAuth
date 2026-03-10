@@ -1,5 +1,4 @@
-// Requires commonjs compatible import for otplib in some TS setups
-const { authenticator } = require('otplib');
+import { authenticator } from 'otplib';
 import qrcode from 'qrcode';
 import { prisma } from '../config/prisma';
 import { encryptMfaSecret, decryptMfaSecret } from '../utils/crypto';
@@ -7,9 +6,9 @@ import crypto from 'crypto';
 
 export class MfaService {
     constructor() {
-        // Allow a drift of 1 step before or after current time
+        // Allow a drift of 2 steps before or after current time (approx ±60s)
         // window: [past_steps, future_steps]
-        authenticator.options = { window: [1, 1] };
+        authenticator.options = { window: [2, 2] };
     }
 
     async generateSetupData(userId: string, email: string) {

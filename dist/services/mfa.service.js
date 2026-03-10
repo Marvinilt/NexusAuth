@@ -4,8 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MfaService = void 0;
-// Requires commonjs compatible import for otplib in some TS setups
-const { authenticator } = require('otplib');
+const otplib_1 = require("otplib");
 const qrcode_1 = __importDefault(require("qrcode"));
 const prisma_1 = require("../config/prisma");
 const crypto_1 = require("../utils/crypto");
@@ -14,12 +13,12 @@ class MfaService {
     constructor() {
         // Allow a drift of 1 step before or after current time
         // window: [past_steps, future_steps]
-        authenticator.options = { window: [1, 1] };
+        otplib_1.authenticator.options = { window: [1, 1] };
     }
     async generateSetupData(userId, email) {
-        const secret = authenticator.generateSecret();
+        const secret = otplib_1.authenticator.generateSecret();
         // Setup service name (e.g., NexusAuth) and user id/email
-        const otpauth = authenticator.keyuri(email, 'NexusAuth', secret);
+        const otpauth = otplib_1.authenticator.keyuri(email, 'NexusAuth', secret);
         const qrCodeUrl = await qrcode_1.default.toDataURL(otpauth);
         const encryptedSecret = (0, crypto_1.encryptMfaSecret)(secret);
         // Store the encrypted secret in db but don't enable MFA yet.
@@ -36,7 +35,7 @@ class MfaService {
         }
         const secret = (0, crypto_1.decryptMfaSecret)(user.mfaSecret);
         try {
-            const isValid = authenticator.verify({ token, secret });
+            const isValid = otplib_1.authenticator.verify({ token, secret });
             if (!isValid) {
                 throw new Error('Invalid TOTP token');
             }
@@ -67,7 +66,7 @@ class MfaService {
             throw new Error('MFA is not enabled for this user');
         }
         const secret = (0, crypto_1.decryptMfaSecret)(user.mfaSecret);
-        const isValid = authenticator.verify({ token, secret });
+        const isValid = otplib_1.authenticator.verify({ token, secret });
         if (!isValid) {
             // Alternatively, fallback to testing if token is a backup code
             const hashedToken = crypto_2.default.createHash('sha256').update(token).digest('hex');

@@ -17,6 +17,7 @@ model User {
   updatedAt      DateTime        @updatedAt
   oauthProviders OAuthProvider[]
   backupCodes    BackupCode[]
+  loginLogs      LoginLog[]
 
   @@map("users")
 }
@@ -47,4 +48,24 @@ model BackupCode {
 enum Provider {
   GOOGLE
   FACEBOOK
+}
+
+model LoginLog {
+  id        String      @id @default(uuid())
+  status    LoginStatus @default(SUCCESS)
+  ipAddress String?
+  userAgent String?
+  location  String?
+  latitude  Float?
+  longitude Float?
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@map("login_logs")
+}
+
+enum LoginStatus {
+  SUCCESS
+  FAILED
 }
