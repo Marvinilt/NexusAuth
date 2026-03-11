@@ -89,6 +89,11 @@ export class AuthService {
                 location = `${geoRes.data.city}, ${geoRes.data.country}`;
                 latitude = geoRes.data.lat;
                 longitude = geoRes.data.lon;
+
+                // If the IP was localhost or missing, fallback to the public IP resolved by the API
+                if (!queryIp && geoRes.data.query) {
+                    options.ipAddress = geoRes.data.query;
+                }
             }
         } catch (err) {
             logger.error(`Geo API failed: ${err}`);
