@@ -54,9 +54,11 @@ const findOrCreateSocialUser = async (profile: any, provider: Provider) => {
     const providerId = profile.id;
 
     if (!email) {
+        logger.error(`[Passport.${provider}] Email not provided by identity provider`);
         throw new Error('Email not provided by identity provider');
     }
 
+    logger.info(`[Passport.${provider}] Checking OAuth provider link for email: ${email}`);
     // Check if the OAuth Provider connection already exists
     const existingProvider = await prisma.oAuthProvider.findUnique({
         where: {
@@ -69,19 +71,24 @@ const findOrCreateSocialUser = async (profile: any, provider: Provider) => {
     });
 
     if (existingProvider) {
+        logger.info(`[Passport.${provider}] Existing OAuth provider link found for user ${existingProvider.user.email} (ID: ${existingProvider.user.id})`);
         return existingProvider.user;
     }
 
+    logger.info(`[Passport.${provider}] No existing OAuth link found. Checking for existing local user by email: ${email}`);
     // Check if a user with this email already exists
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
+        logger.info(`[Passport.${provider}] Local user does not exist. Creating new user account for ${email}`);
         // Create a new user if it doesn't exist
         user = await prisma.user.create({
             data: {
                 email,
             },
         });
+    } else {
+        logger.info(`[Passport.${provider}] Existing local user found for ${email} (ID: ${user.id}). Linking them to ${provider}`);
     }
 
     // Link the provider to the user
@@ -92,6 +99,8 @@ const findOrCreateSocialUser = async (profile: any, provider: Provider) => {
             userId: user.id,
         },
     });
+
+    logger.info(`[Passport.${provider}] Successfully linked ${provider} to user: ${user.id}`);
 
     return user;
 };
