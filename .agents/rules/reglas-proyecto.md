@@ -12,22 +12,55 @@ trigger: always_on
 
 ## 2. Flujo de Desarrollo (Developer Workflow)
 
-### Al Iniciar el desarrollo de una nueva implementación
-1. Si esta iniciando todo un desarrollo nuevo de una implementación de nueva funcionalidad, primero verificar que la rama actual sea develop y que este actualizada.
-2. Luego crea la rama de feature correspondiente para el desarrollo actual.
-3. Inicia el desarrollo de la funcionalidad.
+### Al Iniciar una nueva implementación
+
+1. Crea en git un nuevo branch del feature correcpondiente a partir del branch develop para iniciar el desarrollo de la nueva funcionalidad.
+2. Nunca desarrolles ni hagas commit sobre el branch develop, ni de main, prohibido hacer commit en esos branch.
+3. Verificar que estes en una rama feature antes de realizar un commit.
 
 ### Al Finalizar el desarrollo de una funcionalidad
-1. Cuando el usuario indique que ha finalizado el desarrollo realiza estas acciones:
-    a. Actualiza `README.md` (instrucciones, fecha y descripción de feature).
-    b. Actualiza `docs/DocumentacionTecnica.md` (arquitectura, endpoints, diseño, fecha).
-    c. Realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
-    d. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
+
+Cuando el usuario indique que ha finalizado el desarrollo realiza siempre las siguientes acciones obligatorias:
+
+    1. Actualiza `Changelog.md` con la nueva funcionalidad desarrollada (fecha y descripción detallada del desarrollo realizado), en orden cronológico inverso. No mezcles todo, agrupa los cambios bajo estos encabezados estándar:
+          * Added: Para funciones nuevas.
+          * Changed: Para cambios en funciones existentes.
+          * Deprecated: Para funciones que se eliminarán en versiones futuras.
+          * Removed: Para funciones eliminadas.
+          * Fixed: Para cualquier corrección de errores (Bug fixes).
+          * Security: En caso de vulnerabilidades.
+    
+    2. Actualiza `README.md` con la nueva funcionalidad desarrollada (instrucciones, fecha y descripción de feature).
+    3. Actualiza `docs/DocumentacionTecnica.md` con la nueva funcionalidad desarrollada (arquitectura, diagrama de arquitectura, diagrama de comunicación entre componentes, documentación de endpoints, diseño, librerias utilizadas, requisitos técnicos, etc.)
+    4. Asegúrate de crear o actualizar los Tests Unitarios correspondientes y verifica que pasen exitosamente (`npm test`).
+    5. Realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
+    6. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
 
 ## 3. Reglas de desarrollo  
+
 1. **Documentación de Código:** Todos los métodos, funciones y clases deben contar con documentación (JSDoc, Docstrings) que explique su propósito, parámetros y valores de retorno.
 2. **Nombramiento Descriptivo:** Utilizar nombres de variables, funciones y clases que sean claros y auto-explicativos, evitando abreviaturas ambiguas.
 3. **Comentarios de Lógica:** Incluir comentarios breves que expliquen el razonamiento detrás de bloques de código complejos o decisiones técnicas específicas.
 4. **Responsabilidad Única:** Cada función o clase debe tener una única responsabilidad clara para facilitar el mantenimiento y las pruebas.
 5. **Manejo de Errores:** Implementar validaciones y manejo de excepciones de forma proactiva para asegurar la robustez del sistema.
 6. **Limpieza de Código:** Eliminar código muerto, logs de depuración (console.log, print) y comentarios obsoletos antes de realizar un commit.
+7. **Tipado Estricto (TypeScript):** Prohibido el uso de `any`. Se deben definir interfaces o tipos explícitos para todas las estructuras de datos.
+8. **Consistencia de Dependencias:** No instalar nuevas librerías de terceros sin aprobación explícita. Priorizar el uso de las herramientas ya instaladas en el stack.
+
+## 4. Estándares de Calidad y Testing
+
+1. **Cobertura:** Todo nuevo feature de lógica de negocio o utilidad debe incluir su correspondiente test unitario (usando Vitest para frontend o Jest para backend).
+2. **Happy & Sad Paths:** Los tests deben cubrir tanto el caso de éxito como los casos de error/borde.
+3. **No regresión:** Antes de solicitar el merge, se deben ejecutar todos los tests existentes para asegurar que no se ha roto funcionalidad previa.
+
+## 5. Seguridad y Performance
+
+1. **Secretos:** Nunca incluir contraseñas, tokens o claves API directamente en el código. Usar variables de entorno (`.env`).
+2. **Sanitización:** Validar y sanitizar todas las entradas de datos en el Backend antes de procesarlas.
+3. **Optimización:** Evitar bucles anidados innecesarios y renderizados excesivos en React (usar `useMemo`, `useCallback` solo cuando sea necesario).
+
+## 6. Guías de Frontend (React + Tailwind)
+
+1. **Componentes:** Priorizar componentes funcionales y el uso de Hooks.
+2. **Estilos:** Utilizar clases de utilidad de **Tailwind CSS**. Evitar crear archivos CSS/SASS separados a menos que sea estrictamente necesario para animaciones complejas.
+3. **Semántica y Eficiencia:** Usar elementos HTML estándar (`<button>`, `<input>`) en lugar de `divs` genéricos para las interacciones. Esto mejora la mantenibilidad del código y permite el uso del teclado (Tab/Enter) sin necesidad de programación adicional.

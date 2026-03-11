@@ -55,12 +55,15 @@ class AuthController {
         if (authUser.mfaEnabled) {
             const payload = { userId: authUser.id, email: authUser.email, mfaPending: true };
             const mfaToken = (0, jwt_1.generateToken)(payload, '5m');
-            res.status(200).json({ mfaRequired: true, mfaToken, message: 'MFA verification required' });
+            // Redirect to frontend's MFA verification page with the temporary token
+            res.redirect(`http://localhost:5173/mfa-verify?mfaToken=${mfaToken}`);
             return;
         }
         const payload = { userId: authUser.id, email: authUser.email };
         const token = (0, jwt_1.generateToken)(payload);
-        res.status(200).json({ token, user: { id: authUser.id, email: authUser.email } });
+        const userData = JSON.stringify({ id: authUser.id, email: authUser.email });
+        // Redirect to frontend's callback capture page with token and user data
+        res.redirect(`http://localhost:5173/oauth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
     }
 }
 exports.AuthController = AuthController;
