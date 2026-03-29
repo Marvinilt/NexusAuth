@@ -15,7 +15,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+    return <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>Cargando...</div>;
   }
 
   if (!isAuthenticated) {
@@ -44,7 +44,7 @@ function Header() {
       </div>
       <div>
         {!isAuthenticated && (
-          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Welcome to the future of identity</span>
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Bienvenido al futuro de la identidad</span>
         )}
       </div>
     </header>

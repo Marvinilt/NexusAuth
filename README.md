@@ -1,6 +1,6 @@
 # 🛡️ NexusAuth
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)

@@ -20,12 +20,12 @@ export default function ForgotPasswordPage() {
 
         try {
             await api.post('/recovery/forgot-password', { email });
-            setSuccess('If this email is registered, we have sent a reset link. Check your inbox.');
+            setSuccess('Si este correo está registrado, hemos enviado un enlace de restablecimiento. Revisa tu bandeja de entrada.');
         } catch (err: any) {
             if (err instanceof ApiError) {
                 setError(err.message);
             } else {
-                setError('Failed to send recovery request.');
+                setError('Error al enviar la solicitud de recuperación.');
             }
         } finally {
             setLoading(false);
@@ -37,8 +37,8 @@ export default function ForgotPasswordPage() {
             <Card className="animate-fade-in">
                 <div className="text-center mb-6">
                     <KeyRound size={48} color="var(--primary)" style={{ margin: '0 auto 1rem auto' }} />
-                    <h1>Forgot Password</h1>
-                    <p>We'll send you a link to reset your password</p>
+                    <h1>Recuperar Contraseña</h1>
+                    <p>Te enviaremos un enlace para restablecer tu contraseña</p>
                 </div>
 
                 {error && <div className="error-text mb-4 text-center">{error}</div>}
@@ -46,21 +46,21 @@ export default function ForgotPasswordPage() {
 
                 <form onSubmit={handleResetRequest}>
                     <Input
-                        label="Email Address"
+                        label="Dirección de Correo"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder="tu@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         disabled={success !== ''}
                     />
                     <Button type="submit" loading={loading} disabled={success !== ''} className="mt-4">
-                        Send Reset Link
+                        Enviar Enlace de Recuperación
                     </Button>
                 </form>
 
                 <p className="text-center mt-6 mb-0" style={{ fontSize: '0.875rem' }}>
-                    Remembered your password? <Link to="/login">Back to Sign In</Link>
+                    ¿Recordaste tu contraseña? <Link to="/login">Volver a Iniciar Sesión</Link>
                 </p>
             </Card>
         </div>

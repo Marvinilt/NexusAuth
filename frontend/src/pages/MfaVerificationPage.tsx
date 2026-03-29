@@ -42,7 +42,7 @@ export default function MfaVerificationPage() {
             if (err instanceof ApiError) {
                 setError(err.message);
             } else {
-                setError('Verification failed');
+                setError('Fallo en la verificación');
             }
         } finally {
             setLoading(false);
@@ -54,15 +54,15 @@ export default function MfaVerificationPage() {
             <Card className="animate-fade-in" style={{ textAlign: 'center' }}>
                 <div className="mb-6">
                     <ShieldCheck size={48} color="var(--primary)" style={{ margin: '0 auto 1rem auto' }} />
-                    <h2>Two-Factor Authentication</h2>
-                    <p>Please enter the 6-digit code from your authenticator app.</p>
+                    <h2>Autenticación de Dos Factores</h2>
+                    <p>Por favor ingresa el código de 6 dígitos de tu aplicación autenticadora.</p>
                 </div>
 
                 {error && <div className="error-text mb-4">{error}</div>}
 
                 <form onSubmit={handleVerify}>
                     <Input
-                        label="Security Code"
+                        label="Código de Seguridad"
                         type="text"
                         placeholder="000000"
                         value={token}
@@ -73,7 +73,7 @@ export default function MfaVerificationPage() {
                     />
 
                     <Button type="submit" loading={loading} className="mt-4">
-                        Verify Code
+                        Verificar Código
                     </Button>
                 </form>
             </Card>

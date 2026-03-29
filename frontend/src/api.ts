@@ -38,7 +38,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-        throw new ApiError(data.error || 'API Request failed', response.status);
+        throw new ApiError(data.error || 'La solicitud a la API ha fallado', response.status);
     }
 
     return data;

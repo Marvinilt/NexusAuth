@@ -1,6 +1,5 @@
-# 📘 Documentación Técnica: NexusAuth (v1.0.0)
-
-**Fecha:** 2026-03-09
+# 📘 Documentación Técnica: NexusAuth (v1.0.2)
+**Fecha:** 2026-03-28
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
 * **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript).

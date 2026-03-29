@@ -11,9 +11,9 @@ const crypto_1 = require("../utils/crypto");
 const crypto_2 = __importDefault(require("crypto"));
 class MfaService {
     constructor() {
-        // Allow a drift of 1 step before or after current time
+        // Allow a drift of 2 steps before or after current time (approx ±60s)
         // window: [past_steps, future_steps]
-        otplib_1.authenticator.options = { window: [1, 1] };
+        otplib_1.authenticator.options = { window: [2, 2] };
     }
     async generateSetupData(userId, email) {
         const secret = otplib_1.authenticator.generateSecret();
