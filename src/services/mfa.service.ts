@@ -31,7 +31,7 @@ export class MfaService {
     async verifyAndEnable(userId: string, token: string) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user || !user.mfaSecret) {
-            throw new Error('MFA Setup not initiated');
+            throw new Error('Configuración de MFA no iniciada');
         }
 
         const secret = decryptMfaSecret(user.mfaSecret);
@@ -40,7 +40,7 @@ export class MfaService {
             const isValid = authenticator.verify({ token, secret });
 
             if (!isValid) {
-                throw new Error('Invalid TOTP token');
+                throw new Error('Código TOTP inválido');
             }
 
             // Generate 10 Backup codes
@@ -63,14 +63,14 @@ export class MfaService {
 
             return { success: true, backupCodes };
         } catch (error: any) {
-            throw new Error(error.message || 'Invalid TOTP token');
+            throw new Error(error.message || 'Código TOTP inválido');
         }
     }
 
     async verifyLoginToken(userId: string, token: string) {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user || !user.mfaSecret || !user.mfaEnabled) {
-            throw new Error('MFA is not enabled for this user');
+            throw new Error('MFA no está activado para este usuario');
         }
 
         const secret = decryptMfaSecret(user.mfaSecret);
@@ -90,7 +90,7 @@ export class MfaService {
                 return true;
             }
 
-            throw new Error('Invalid MFA token');
+            throw new Error('Token MFA inválido');
         }
 
         return true;

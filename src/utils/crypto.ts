@@ -32,7 +32,7 @@ export const decryptMfaSecret = (encryptedText: string): string => {
     const [ivHex, authTagHex, encryptedData] = encryptedText.split(':');
 
     if (!ivHex || !authTagHex || !encryptedData) {
-        throw new Error('Invalid encrypted MFA secret format');
+        throw new Error('Formato de secreto MFA encriptado inválido');
     }
 
     const iv = Buffer.from(ivHex, 'hex');

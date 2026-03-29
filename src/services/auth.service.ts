@@ -10,7 +10,7 @@ type LoginStatus = 'SUCCESS' | 'FAILED';
 export class AuthService {
     async register(email: string, passwordHashRaw: string) {
         if (!validateEmail(email)) {
-            throw new Error('Invalid email format');
+            throw new Error('Formato de correo electrónico inválido');
         }
 
         const { valid, message } = validatePasswordComplexity(passwordHashRaw);
@@ -20,7 +20,7 @@ export class AuthService {
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
-            throw new Error('User already exists');
+            throw new Error('El usuario ya existe');
         }
 
         const hashedPassword = await hashPassword(passwordHashRaw);
@@ -42,14 +42,14 @@ export class AuthService {
         });
         if (!user || (!user.passwordHash && user.oauthProviders.length > 0)) {
             logger.info(`[AuthService.login] Login failed for ${email}: User not found or tried using password on a purely social account`);
-            throw new Error('Invalid credentials');
+            throw new Error('Credenciales inválidas');
         }
 
         if (user.passwordHash) {
             const isValid = await comparePassword(passwordRaw, user.passwordHash);
             if (!isValid) {
                 logger.info(`[AuthService.login] Login failed for ${email}: Incorrect password`);
-                throw new Error('Invalid credentials');
+                throw new Error('Credenciales inválidas');
             }
         }
 
@@ -61,7 +61,7 @@ export class AuthService {
             // Issue a temporary token indicating MFA is pending
             const payload: TokenPayload = { userId: user.id, email: user.email, mfaPending: true };
             const mfaToken = generateToken(payload, '15m');
-            return { mfaRequired: true, mfaToken, message: 'MFA verification required' };
+            return { mfaRequired: true, mfaToken, message: 'Se requiere verificación MFA' };
         }
 
         // Standard Login

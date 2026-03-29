@@ -12,17 +12,17 @@ export class AuthController {
             const { email, password } = req.body;
             logger.info(`[AuthController.register] Incoming register request for email: ${email}`);
             if (!email || !password) {
-                res.status(400).json({ error: 'Email and password are required' });
+                res.status(400).json({ error: 'El correo y la contraseña son requeridos' });
                 return;
             }
             const user = await authService.register(email, password);
-            res.status(201).json({ message: 'User registered successfully', user });
+            res.status(201).json({ message: 'Usuario registrado exitosamente', user });
         } catch (error: any) {
             if (error.message.includes('already exists') || error.message.includes('Invalid') || error.message.includes('Password must')) {
                 res.status(400).json({ error: error.message });
             } else {
                 logger.error(`Registration error: ${error.message}`);
-                res.status(500).json({ error: 'Internal server error' });
+                res.status(500).json({ error: 'Error interno del servidor' });
             }
         }
     }
@@ -32,7 +32,7 @@ export class AuthController {
             const { email, password } = req.body;
             logger.info(`[AuthController.login] Incoming login request for email: ${email}`);
             if (!email || !password) {
-                res.status(400).json({ error: 'Email and password are required' });
+                res.status(400).json({ error: 'El correo y la contraseña son requeridos' });
                 return;
             }
             const result = await authService.login(email, password);
@@ -64,11 +64,11 @@ export class AuthController {
                 logger.error(`Failed to log failed login: ${logErr}`);
             }
 
-            if (error.message === 'Invalid credentials') {
+            if (error.message === 'Credenciales inválidas') {
                 res.status(401).json({ error: error.message });
             } else {
                 logger.error(`Login error: ${error.message}`);
-                res.status(500).json({ error: 'Internal server error' });
+                res.status(500).json({ error: 'Error interno del servidor' });
             }
         }
     }
@@ -76,7 +76,7 @@ export class AuthController {
     async oauthCallback(req: Request, res: Response): Promise<void> {
         if (!req.user) {
             logger.error(`[AuthController.oauthCallback] Authentication failed to return an OAuth user object`);
-            res.status(401).json({ error: 'Authentication failed' });
+            res.status(401).json({ error: 'Autenticación fallida' });
             return;
         }
 
@@ -113,7 +113,7 @@ export class AuthController {
             const history = await authService.getLoginHistory(user.userId);
             res.json(history);
         } catch (error: any) {
-            res.status(500).json({ error: 'Failed to fetch history' });
+            res.status(500).json({ error: 'Error al obtener el historial' });
         }
     }
 }

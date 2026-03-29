@@ -38,7 +38,7 @@ export default function LoginPage() {
             if (err instanceof ApiError) {
                 setError(err.message);
             } else {
-                setError('An unexpected error occurred. Please try again.');
+                setError('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
             }
         } finally {
             setLoading(false);
@@ -54,8 +54,8 @@ export default function LoginPage() {
         <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
             <Card className="animate-fade-in">
                 <div className="text-center mb-6">
-                    <h1>Welcome back</h1>
-                    <p>Login to your NexusAuth account</p>
+                    <h1>Bienvenido de nuevo</h1>
+                    <p>Inicia sesión en tu cuenta de NexusAuth</p>
                 </div>
 
                 {error && <div className="error-text mb-4 text-center">{error}</div>}
@@ -64,9 +64,9 @@ export default function LoginPage() {
                     <div style={{ position: 'relative' }}>
                         <Mail className="lucide-icon" size={18} style={{ position: 'absolute', top: '38px', left: '12px', color: 'var(--text-secondary)' }} />
                         <Input
-                            label="Email"
+                            label="Correo electrónico"
                             type="email"
-                            placeholder="you@example.com"
+                            placeholder="tu@ejemplo.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -77,9 +77,9 @@ export default function LoginPage() {
                     <div style={{ position: 'relative' }}>
                         <Lock className="lucide-icon" size={18} style={{ position: 'absolute', top: '38px', left: '12px', color: 'var(--text-secondary)' }} />
                         <Input
-                            label="Password"
+                            label="Contraseña"
                             type="password"
-                            placeholder="Enter your password"
+                            placeholder="Ingresa tu contraseña"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -88,15 +88,15 @@ export default function LoginPage() {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-1rem', marginBottom: '1.5rem' }}>
-                        <Link to="/forgot-password" style={{ fontSize: '0.875rem' }}>Forgot password?</Link>
+                        <Link to="/forgot-password" style={{ fontSize: '0.875rem' }}>¿Olvidaste tu contraseña?</Link>
                     </div>
 
                     <Button type="submit" loading={loading} className="mb-4">
-                        <LogIn size={18} /> Sign In
+                        <LogIn size={18} /> Iniciar Sesión
                     </Button>
                 </form>
 
-                <div className="divider">Or continue with</div>
+                <div className="divider">O continúa con</div>
 
                 <Button variant="social" onClick={() => handleSocialLogin('google')} type="button">
                     Google
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 </Button>
 
                 <p className="text-center mt-4 mb-0" style={{ fontSize: '0.875rem' }}>
-                    Don't have an account? <Link to="/register">Sign up</Link>
+                    ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
                 </p>
             </Card>
         </div>

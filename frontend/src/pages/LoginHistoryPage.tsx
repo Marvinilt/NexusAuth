@@ -66,15 +66,15 @@ export default function LoginHistoryPage() {
         <div className="container" style={{ padding: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem', gap: '1rem' }}>
                 <Button variant="secondary" onClick={() => navigate('/dashboard')} style={{ padding: '0.5rem' }}>
-                    <ArrowLeft size={18} /> Back to Dashboard
+                    <ArrowLeft size={18} /> Volver al Panel
                 </Button>
-                <h1 style={{ margin: 0, flex: 1 }}>Login History</h1>
+                <h1 style={{ margin: 0, flex: 1 }}>Historial de Inicios de Sesión</h1>
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem' }}>Loading advanced history...</div>
+                <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando historial avanzado...</div>
             ) : history.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No recent activity found.</div>
+                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No se encontró actividad reciente.</div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
                     {history.map((item) => (
@@ -83,7 +83,7 @@ export default function LoginHistoryPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {item.status === 'SUCCESS' ? <ShieldCheck size={20} color="var(--success)" /> : <XCircle size={20} color="var(--error)" />}
                                     <span style={{ fontWeight: 600, color: item.status === 'SUCCESS' ? 'var(--success)' : 'var(--error)' }}>
-                                        {item.status === 'SUCCESS' ? 'Successful Login' : 'Failed Login Attempt'}
+                                        {item.status === 'SUCCESS' ? 'Inicio de Sesión Exitoso' : 'Intento de Inicio Fallido'}
                                     </span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -101,7 +101,7 @@ export default function LoginHistoryPage() {
                                     <span style={{ flex: 1 }}>{item.location || 'Location Not Available'}</span>
                                 </p>
                                 <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>
-                                    <strong>Device:</strong> {item.userAgent || 'Unknown'}
+                                    <strong>Dispositivo:</strong> {item.userAgent || 'Desconocido'}
                                 </p>
                             </div>
 
@@ -147,7 +147,7 @@ export default function LoginHistoryPage() {
                                         backdropFilter: 'blur(4px)',
                                         zIndex: 1000
                                     }}>
-                                        <Maximize2 size={12} /> Enlarge Map
+                                        <Maximize2 size={12} /> Ampliar Mapa
                                     </div>
                                 </div>
                             ) : (
@@ -162,7 +162,7 @@ export default function LoginHistoryPage() {
                                     fontSize: '0.9rem',
                                     background: 'rgba(255,255,255,0.02)'
                                 }}>
-                                    Map data unavailable
+                                    Datos del mapa no disponibles
                                 </div>
                             )}
                         </Card>
@@ -196,7 +196,7 @@ export default function LoginHistoryPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <MapPin color="var(--primary)" />
-                                {selectedMap.location || 'Location'}
+                                {selectedMap.location || 'Ubicación'}
                             </h3>
                             <button
                                 onClick={closeMapModal}
@@ -217,11 +217,11 @@ export default function LoginHistoryPage() {
                                 />
                                 <Marker position={[selectedMap.latitude, selectedMap.longitude]}>
                                     <Popup>
-                                        <strong>{selectedMap.status === 'SUCCESS' ? 'Successful Login' : 'Failed Attempt'}</strong>
+                                        <strong>{selectedMap.status === 'SUCCESS' ? 'Inicio de Sesión Exitoso' : 'Intento Fallido'}</strong>
                                         <br />
                                         IP: {selectedMap.ipAddress}
                                         <br />
-                                        Date: {new Date(selectedMap.createdAt).toLocaleString()}
+                                        Fecha: {new Date(selectedMap.createdAt).toLocaleString()}
                                     </Popup>
                                 </Marker>
                             </MapContainer>

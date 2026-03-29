@@ -9,7 +9,7 @@ export class RecoveryController {
         try {
             const { email } = req.body;
             if (!email) {
-                res.status(400).json({ error: 'Email is required' });
+                res.status(400).json({ error: 'El correo electrónico es requerido' });
                 return;
             }
 
@@ -17,10 +17,10 @@ export class RecoveryController {
             // expose whether the email exists in the database.
             await recoveryService.sendRecoveryEmail(email);
 
-            res.status(200).json({ message: 'If the email exists, a recovery link has been sent' });
+            res.status(200).json({ message: 'Si el correo existe, se ha enviado un enlace de recuperación' });
         } catch (error: any) {
             logger.error(`Recovery Email Error: ${error.message}`);
-            res.status(500).json({ error: 'Internal server error' });
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 
@@ -28,14 +28,14 @@ export class RecoveryController {
         try {
             const { token, newPassword } = req.body;
             if (!token || !newPassword) {
-                res.status(400).json({ error: 'Token and new password are required' });
+                res.status(400).json({ error: 'El token y la nueva contraseña son requeridos' });
                 return;
             }
 
             const result = await recoveryService.resetPassword(token, newPassword);
             res.status(200).json(result);
         } catch (error: any) {
-            res.status(400).json({ error: error.message || 'Error occurred during reset password' });
+            res.status(400).json({ error: error.message || 'Ocurrió un error al restablecer la contraseña' });
         }
     }
 }

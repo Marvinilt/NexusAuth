@@ -18,8 +18,8 @@ class RecoveryService {
         // Normally this URL point to a frontend app where the user inputs their new password
         const recoveryUrl = `http://localhost:3000/reset-password?token=${token}`;
         try {
-            await resend.emails.send({
-                from: 'NexusAuth <noreply@nexusauth.com>',
+            const { data, error } = await resend.emails.send({
+                from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
                 to: email,
                 subject: 'Password Recovery Instructions',
                 html: `<p>Hello,</p>
@@ -27,9 +27,13 @@ class RecoveryService {
                        <a href="${recoveryUrl}">Reset Password</a>
                        <p>If you didn't request this, you can ignore this email.</p>`
             });
+            if (error) {
+                console.error('Failed to send email with Resend (API error):', error);
+                throw new Error('Could not send recovery email');
+            }
         }
         catch (error) {
-            console.error('Failed to send email with Resend:', error);
+            console.error('Failed to send email with Resend (Exception):', error);
             // Even if it fails, throw a generic error in real environment
             throw new Error('Could not send recovery email');
         }

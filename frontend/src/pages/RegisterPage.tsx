@@ -25,7 +25,7 @@ export default function RegisterPage() {
             if (err instanceof ApiError) {
                 setError(err.message);
             } else {
-                setError('Error completing registration');
+                setError('Error al completar el registro');
             }
         } finally {
             setLoading(false);
@@ -40,40 +40,40 @@ export default function RegisterPage() {
         <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
             <Card className="animate-fade-in">
                 <div className="text-center mb-6">
-                    <h1>Create an account</h1>
-                    <p>Join NexusAuth today</p>
+                    <h1>Crear una cuenta</h1>
+                    <p>Únete a NexusAuth hoy</p>
                 </div>
 
                 {error && <div className="error-text mb-4 text-center">{error}</div>}
 
                 <form onSubmit={handleRegister}>
                     <Input
-                        label="Email"
+                        label="Correo electrónico"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder="tu@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
 
                     <Input
-                        label="Password"
+                        label="Contraseña"
                         type="password"
-                        placeholder="Must be at least 12 characters"
+                        placeholder="Debe tener al menos 12 caracteres"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
                     <p style={{ fontSize: '0.75rem', marginTop: '-1rem', color: 'var(--text-secondary)' }}>
-                        Requires at least 1 number and 1 special symbol.
+                        Requiere al menos 1 número y 1 símbolo especial.
                     </p>
 
                     <Button type="submit" loading={loading} className="mb-4">
-                        <UserPlus size={18} /> Sign Up
+                        <UserPlus size={18} /> Registrarse
                     </Button>
                 </form>
 
-                <div className="divider">Or register with</div>
+                <div className="divider">O regístrate con</div>
 
                 <Button variant="social" onClick={() => handleSocialRegister('google')} type="button">
                     Google
@@ -83,7 +83,7 @@ export default function RegisterPage() {
                 </Button>
 
                 <p className="text-center mt-4 mb-0" style={{ fontSize: '0.875rem' }}>
-                    Already have an account? <Link to="/login">Sign in</Link>
+                    ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión</Link>
                 </p>
             </Card>
         </div>

@@ -49,8 +49,10 @@ const findOrCreateSocialUser = async (profile, provider) => {
     const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
     const providerId = profile.id;
     if (!email) {
+        logger_1.logger.error(`[Passport.${provider}] Email not provided by identity provider`);
         throw new Error('Email not provided by identity provider');
     }
+    logger_1.logger.info(`[Passport.${provider}] Checking OAuth provider link for email: ${email}`);
     // Check if the OAuth Provider connection already exists
     const existingProvider = await prisma_1.prisma.oAuthProvider.findUnique({
         where: {
@@ -62,17 +64,23 @@ const findOrCreateSocialUser = async (profile, provider) => {
         include: { user: true },
     });
     if (existingProvider) {
+        logger_1.logger.info(`[Passport.${provider}] Existing OAuth provider link found for user ${existingProvider.user.email} (ID: ${existingProvider.user.id})`);
         return existingProvider.user;
     }
+    logger_1.logger.info(`[Passport.${provider}] No existing OAuth link found. Checking for existing local user by email: ${email}`);
     // Check if a user with this email already exists
     let user = await prisma_1.prisma.user.findUnique({ where: { email } });
     if (!user) {
+        logger_1.logger.info(`[Passport.${provider}] Local user does not exist. Creating new user account for ${email}`);
         // Create a new user if it doesn't exist
         user = await prisma_1.prisma.user.create({
             data: {
                 email,
             },
         });
+    }
+    else {
+        logger_1.logger.info(`[Passport.${provider}] Existing local user found for ${email} (ID: ${user.id}). Linking them to ${provider}`);
     }
     // Link the provider to the user
     await prisma_1.prisma.oAuthProvider.create({
@@ -82,5 +90,6 @@ const findOrCreateSocialUser = async (profile, provider) => {
             userId: user.id,
         },
     });
+    logger_1.logger.info(`[Passport.${provider}] Successfully linked ${provider} to user: ${user.id}`);
     return user;
 };

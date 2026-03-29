@@ -19,6 +19,6 @@ export const verifyToken = (token: string): TokenPayload => {
         return jwt.verify(token, config.jwtSecret) as TokenPayload;
     } catch (error: any) {
         logger.error(`JWT_VERIFY_ERROR: ${error.message} - Token start: ${token ? token.substring(0, 15) : 'null'}`);
-        throw new Error('Invalid or expired token');
+        throw new Error('Token inválido o expirado');
     }
 };

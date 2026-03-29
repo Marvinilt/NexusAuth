@@ -15,7 +15,7 @@ export class MfaController {
             res.status(200).json(data);
         } catch (error: any) {
             logger.error(`MFA Setup Error: ${error.message}`);
-            res.status(500).json({ error: 'Failed to setup MFA' });
+            res.status(500).json({ error: 'Error al configurar MFA' });
         }
     }
 
@@ -25,7 +25,7 @@ export class MfaController {
             const { token } = req.body;
 
             if (!token) {
-                res.status(400).json({ error: 'Token is required' });
+                res.status(400).json({ error: 'El token es requerido' });
                 return;
             }
 
@@ -44,12 +44,12 @@ export class MfaController {
             const { token } = req.body;
 
             if (!token) {
-                res.status(400).json({ error: 'Token is required' });
+                res.status(400).json({ error: 'El token es requerido' });
                 return;
             }
 
             const isValid = await mfaService.verifyLoginToken(user.userId, token);
-            if (!isValid) throw new Error('Invalid MFA token');
+            if (!isValid) throw new Error('Token MFA inválido');
 
             const ipAddress = req.ip || req.socket.remoteAddress;
             const userAgent = (req.headers['user-agent'] as string) || 'Unknown';
@@ -80,7 +80,7 @@ export class MfaController {
                 logger.error(`Failed to log failed MFA metadata: ${logErr}`);
             }
 
-            res.status(401).json({ error: error.message || 'Invalid or expired token' });
+            res.status(401).json({ error: error.message || 'Token inválido o expirado' });
         }
     }
 }

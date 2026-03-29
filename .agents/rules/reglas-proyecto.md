@@ -12,11 +12,12 @@ trigger: always_on
 
 ## 2. Flujo de Desarrollo (Developer Workflow)
 
-### Al Iniciar una nueva implementación
+### Al Iniciar nuevos cambios, un nuevo feature, o nuevas correcciones
 
-1. Crea en git un nuevo branch del feature correcpondiente a partir del branch develop para iniciar el desarrollo de la nueva funcionalidad.
-2. Nunca desarrolles ni hagas commit sobre el branch develop, ni de main, prohibido hacer commit en esos branch.
-3. Verificar que estes en una rama feature antes de realizar un commit.
+1. Si ya estas en una rama feature, continua ahí haciendo los cambios en ese branch, no crees ningun otro branch.
+2. Si NO estas en una rama feature, crea en git un nuevo branch del feature correspondiente a partir del branch develop para iniciar el desarrollo de la nueva funcionalidad.
+3. Nunca hagas cambios ni hagas commit sobre el branch develop, tampoco en el branch main, prohibido hacer commit en branch develop o main.
+
 
 ### Al Finalizar el desarrollo de una funcionalidad
 
@@ -33,8 +34,10 @@ Cuando el usuario indique que ha finalizado el desarrollo realiza siempre las si
     2. Actualiza `README.md` con la nueva funcionalidad desarrollada (instrucciones, fecha y descripción de feature).
     3. Actualiza `docs/DocumentacionTecnica.md` con la nueva funcionalidad desarrollada (arquitectura, diagrama de arquitectura, diagrama de comunicación entre componentes, documentación de endpoints, diseño, librerias utilizadas, requisitos técnicos, etc.)
     4. Asegúrate de crear o actualizar los Tests Unitarios correspondientes y verifica que pasen exitosamente (`npm test`).
-    5. Realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
-    6. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
+    5. Asegurate de estar en una rama feature antes de realizar un commit.
+    6. Nunca hagas cambios ni hagas commit sobre el branch develop, tampoco en el branch main, prohibido hacer commit en branch develop o main.
+    7. Si estas en una rama feature realiza el commit de todos los cambios con una descripción detallada del desarrollo y has push al feature branch.
+    8. Crea un Pull Request del feature branch hacia `develop` con título `feat(<scope>): <descripción>`.
 
 ## 3. Reglas de desarrollo  
 
