@@ -17,6 +17,9 @@ export const config = {
     facebookAppId: process.env.FACEBOOK_APP_ID,
     facebookAppSecret: process.env.FACEBOOK_APP_SECRET,
     facebookCallbackUrl: process.env.FACEBOOK_CALLBACK_URL,
+    githubClientId: process.env.GITHUB_CLIENT_ID,
+    githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+    githubCallbackUrl: process.env.GITHUB_CALLBACK_URL,
 };
 
 // Validations

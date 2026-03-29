@@ -40,90 +40,171 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="container animate-fade-in" style={{ padding: '4rem 2rem' }}>
-            <h1>Dashboard</h1>
-            <p>¡Bienvenido a NexusAuth! Has iniciado sesión como {user?.email}</p>
-            {user?.lastLoginAt && (
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                    <strong>Último inicio de sesión:</strong> {new Date(user.lastLoginAt).toLocaleString(undefined, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                    })}
+        <div className="container animate-fade-in" style={{ padding: '1.5rem 2rem', position: 'relative' }}>
+            {/* User Logout Area */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <Button 
+                    variant="secondary" 
+                    onClick={logout} 
+                    style={{ 
+                        padding: '0.35rem 0.7rem', 
+                        fontSize: '0.75rem', 
+                        width: 'auto', 
+                        opacity: 0.8, 
+                        border: '1px solid var(--border)',
+                        background: 'rgba(255,255,255,0.05)',
+                        color: 'var(--text-secondary)',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                    }}
+                >
+                    <LogOut size={14} /> Cerrar Sesion
+                </Button>
+            </div>
+
+            {/* Header / Greeting - More compact */}
+            <header style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                <div style={{ display: 'inline-block', padding: '0.25rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '2rem', border: '1px solid rgba(99, 102, 241, 0.2)', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                    Gestión de Identidad
+                </div>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.25rem', letterSpacing: '-0.025em' }}>
+                    Panel de <span style={{ color: 'var(--primary)' }}>Control</span>
+                </h1>
+                <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto', opacity: 0.8 }}>
+                    Bienvenido, {user?.email}. Administra tu seguridad y actividad.
                 </p>
-            )}
+            </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
-
-                <Card>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h2>Detalles de la Cuenta</h2>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <Button variant="secondary" onClick={() => window.location.href = '/login-history'} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
-                                <Clock size={16} /> Histórico de login
-                            </Button>
-                            <Button variant="secondary" onClick={logout} style={{ width: 'auto', padding: '0.5rem 1rem' }}>
-                                <LogOut size={16} /> Cerrar sesión
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="divider">Configuración de Seguridad</div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginTop: '1rem' }}>
-                        <div style={{ background: 'rgba(99, 102, 241, 0.2)', padding: '0.75rem', borderRadius: '50%' }}>
-                            <ShieldAlert size={24} color="var(--primary)" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                
+                {/* Profile Information Card - Compact */}
+                <Card style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div style={{ 
+                            width: '48px', height: '48px', 
+                            background: 'linear-gradient(135deg, var(--primary), #818cf8)', 
+                            borderRadius: '12px', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 8px 12px -3px rgba(99, 102, 241, 0.3)'
+                        }}>
+                            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                                {user?.email[0].toUpperCase()}
+                            </span>
                         </div>
                         <div>
-                            <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>Autenticación de Dos Factores (2FA)</h3>
-                            <p style={{ fontSize: '0.875rem' }}>Protege tu cuenta usando una aplicación autenticadora.</p>
-
-                            {!setupData && !backupCodes && (
-                                <Button onClick={handleStartMfaSetup} style={{ width: 'auto' }}>Habilitar 2FA</Button>
-                            )}
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Perfil Personal</h2>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>ID: {user?.id.substring(0, 8)}...</p>
                         </div>
                     </div>
 
-                    {/* MFA Setup QR Code Stage */}
-                    {setupData && (
-                        <div style={{ background: 'var(--bg-dark)', padding: '1.5rem', borderRadius: '8px', marginTop: '1.5rem', border: '1px solid var(--border)' }}>
-                            <h4 style={{ marginBottom: '1rem' }}>1. Escanea el código QR</h4>
-                            <p style={{ fontSize: '0.875rem' }}>Usa Google Authenticator o Authy para escanear este código.</p>
-                            <div style={{ background: 'white', padding: '1rem', display: 'inline-block', borderRadius: '8px', marginBottom: '1rem' }}>
-                                <img src={setupData.qrCodeUrl} alt="Código QR de MFA" style={{ width: '200px', height: '200px' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <CodeSquare size={16} color="var(--primary)" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Email</span>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{user?.email}</span>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '8px' }}>
+                                <Clock size={16} color="var(--primary)" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Ultimo Acceso</span>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+                                    {user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Sesión Actual'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '1.5rem' }}>
+                        <Button 
+                            variant="secondary" 
+                            onClick={() => window.location.href = '/login-history'} 
+                            style={{ 
+                                background: 'rgba(255,255,255,0.03)', 
+                                border: '1px solid var(--border)',
+                                fontSize: '0.85rem',
+                                padding: '0.6rem'
+                            }}
+                        >
+                            Ver Historial de Accesos
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* Security (2FA) Setup Card - Compact */}
+                <Card style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: 'rgba(34, 197, 94, 0.15)', borderRadius: '8px' }}>
+                            <ShieldAlert size={18} color="var(--success)" />
+                        </div>
+                        <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Seguridad 2FA</h2>
+                    </div>
+
+                    {!setupData && !backupCodes ? (
+                        <>
+                            <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                                Protege tu cuenta incluso si tu contraseña ha sido filtrada.
+                            </p>
+                            
+                            <div style={{ background: 'rgba(15, 23, 42, 0.3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
+                                <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                    <li style={{ marginBottom: '0.4rem' }}>Tokens TOTP temporales</li>
+                                    <li>Códigos Maestros de respaldo</li>
+                                </ul>
                             </div>
 
-                            <h4 style={{ marginBottom: '0.5rem', marginTop: '1rem' }}>2. Ingresa tu código de 6 dígitos</h4>
-                            <form onSubmit={handleVerifyMfaSetup}>
-                                <Input
-                                    label="Código de Verificación"
-                                    value={mfaToken}
-                                    onChange={(e) => setMfaToken(e.target.value)}
-                                    error={mfaError}
-                                    placeholder="000 000"
-                                    maxLength={6}
-                                    required
-                                />
-                                <Button type="submit">Completar Configuración</Button>
-                            </form>
-                        </div>
-                    )}
-
-                    {/* MFA Success & Backup Codes */}
-                    {backupCodes && (
-                        <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid var(--success)', padding: '1.5rem', borderRadius: '8px', marginTop: '1.5rem' }}>
-                            <h4 style={{ color: 'var(--success)', marginBottom: '1rem' }}>¡2FA Habilitado Exitosamente!</h4>
-                            <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>Por favor guarda estos códigos de respaldo en un lugar seguro. Puedes usarlos para recuperar tu cuenta si pierdes tu dispositivo.</p>
-
-                            <div style={{ background: 'var(--bg-dark)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '1rem', borderRadius: '8px', fontFamily: 'monospace' }}>
-                                {backupCodes.map((code, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <CodeSquare size={14} color="var(--text-secondary)" /> {code}
+                            <Button onClick={handleStartMfaSetup} style={{ padding: '0.75rem', background: 'var(--primary)', fontWeight: 700, fontSize: '0.9rem' }}>
+                                Configurar Protección 2FA
+                            </Button>
+                        </>
+                    ) : (
+                        <div>
+                            {setupData && (
+                                <div style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                                    <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary)', fontSize: '1rem' }}>Sincronización</h4>
+                                    <div style={{ textAlign: 'center', background: '#fff', padding: '1rem', borderRadius: '10px', marginBottom: '1rem' }}>
+                                        <img src={setupData.qrCodeUrl} alt="QR MFA" style={{ width: '120px', height: '120px' }} />
                                     </div>
-                                ))}
-                            </div>
+                                    <form onSubmit={handleVerifyMfaSetup}>
+                                        <Input
+                                            label="Código de 6 dígitos"
+                                            value={mfaToken}
+                                            onChange={(e) => setMfaToken(e.target.value)}
+                                            error={mfaError}
+                                            placeholder="······"
+                                            maxLength={6}
+                                            required
+                                            style={{ textAlign: 'center', fontSize: '1.2rem', padding: '0.5rem' }}
+                                        />
+                                        <Button type="submit" style={{ marginTop: '0.75rem', padding: '0.6rem' }}>Confirmar Activación</Button>
+                                    </form>
+                                </div>
+                            )}
+
+                            {backupCodes && (
+                                <div style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid var(--success)', padding: '1.25rem', borderRadius: '10px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <ShieldAlert size={16} color="var(--success)" />
+                                        <h4 style={{ color: 'var(--success)', margin: 0, fontSize: '1.1rem' }}>¡Activo!</h4>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', marginBottom: '0.75rem', color: 'var(--text-primary)', opacity: 0.8 }}>Guarda estos códigos maestros:</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '0.75rem', background: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                                        {backupCodes.map((code, i) => (
+                                            <div key={i} style={{ fontFamily: 'monospace', color: 'var(--success)', fontSize: '0.8rem' }}>{code}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
-
                 </Card>
             </div>
         </div>

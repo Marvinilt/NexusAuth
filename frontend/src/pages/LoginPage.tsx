@@ -45,7 +45,7 @@ export default function LoginPage() {
         }
     };
 
-    const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    const handleSocialLogin = (provider: 'google' | 'facebook' | 'github') => {
         // Redirects browser to backend which initiates the OAuth flow
         window.location.href = `http://localhost:3000/auth/${provider}`;
     }
@@ -103,6 +103,9 @@ export default function LoginPage() {
                 </Button>
                 <Button variant="social" onClick={() => handleSocialLogin('facebook')} type="button">
                     Facebook
+                </Button>
+                <Button variant="social" onClick={() => handleSocialLogin('github')} type="button">
+                    GitHub
                 </Button>
 
                 <p className="text-center mt-4 mb-0" style={{ fontSize: '0.875rem' }}>

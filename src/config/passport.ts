@@ -1,10 +1,12 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy, Profile as GoogleProfile } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy, Profile as FacebookProfile } from 'passport-facebook';
+import { Strategy as GitHubStrategy, Profile as GitHubProfile } from 'passport-github2';
 import { prisma } from './prisma';
 import { config } from './env';
 import { Provider } from '@prisma/client';
 import { logger } from './logger';
+import axios from 'axios';
 
 export const configurePassport = () => {
     // Google Strategy
@@ -47,6 +49,54 @@ export const configurePassport = () => {
             }
         )
     );
+
+    // GitHub Strategy
+    passport.use(
+        new GitHubStrategy(
+            {
+                clientID: config.githubClientId || 'mock_github_client_id',
+                clientSecret: config.githubClientSecret || 'mock_github_client_secret',
+                callbackURL: config.githubCallbackUrl || 'http://localhost:3000/auth/github/callback',
+            },
+            async (accessToken: string, refreshToken: string, profile: GitHubProfile, done: any) => {
+                try {
+                    // GitHub sometimes doesn't return the email even with the user:email scope
+                    // if the user has it set to private. We need to fetch it explicitly.
+                    let email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
+
+                    if (!email && accessToken) {
+                        logger.info(`[Passport.GITHUB] Email not in profile, fetching from GitHub API...`);
+                        const response = await axios.get('https://api.github.com/user/emails', {
+                            headers: {
+                                'Authorization': `token ${accessToken}`,
+                                'User-Agent': 'NexusAuth'
+                            }
+                        });
+
+                        if (response.data && Array.isArray(response.data)) {
+                            // Find primary verified email or just the first one
+                            const primary = response.data.find((e: any) => e.primary && e.verified) ||
+                                          response.data.find((e: any) => e.verified) ||
+                                          response.data[0];
+
+                            if (primary) {
+                                email = primary.email;
+                                // Injecting it back into the profile object so findOrCreateSocialUser can pick it up
+                                (profile as any).emails = [{ value: email }];
+                                logger.info(`[Passport.GITHUB] Found email through API: ${email}`);
+                            }
+                        }
+                    }
+
+                    let user = await findOrCreateSocialUser(profile, Provider.GITHUB);
+                    return done(null, user);
+                } catch (error) {
+                    logger.error(`GitHub Strategy Error: ${error}`);
+                    return done(error, undefined);
+                }
+            }
+        )
+    );
 };
 
 const findOrCreateSocialUser = async (profile: any, provider: Provider) => {
@@ -54,7 +104,7 @@ const findOrCreateSocialUser = async (profile: any, provider: Provider) => {
     const providerId = profile.id;
 
     if (!email) {
-        logger.error(`[Passport.${provider}] Email not provided by identity provider`);
+        logger.error(`[Passport.${provider}] Email not provided by identity provider. Profile structure: ${JSON.stringify(profile)}`);
         throw new Error('Email not provided by identity provider');
     }
 
