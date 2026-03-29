@@ -64,111 +64,155 @@ export default function LoginHistoryPage() {
 
     return (
         <div className="container" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem', gap: '1rem' }}>
-                <Button variant="secondary" onClick={() => navigate('/dashboard')} style={{ padding: '0.5rem' }}>
-                    <ArrowLeft size={18} /> Volver al Panel
-                </Button>
-                <h1 style={{ margin: 0, flex: 1 }}>Historial de Inicios de Sesión</h1>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: '3rem', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => navigate('/dashboard')} 
+                        style={{ 
+                            padding: '0.4rem 0.6rem', 
+                            fontSize: '0.75rem', 
+                            width: 'auto', 
+                            opacity: 0.7, 
+                            border: '1px solid var(--border)',
+                            background: 'transparent',
+                            borderRadius: '6px'
+                        }}
+                    >
+                        <ArrowLeft size={14} /> Volver
+                    </Button>
+                </div>
+                <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: 800, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    Historial de Inicios de Sesión
+                </h1>
+                <div /> {/* Spacer div to ensure title center */}
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando historial avanzado...</div>
+                <div style={{ textAlign: 'center', padding: '5rem' }}>Cargando historial avanzado...</div>
             ) : history.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>No se encontró actividad reciente.</div>
+                <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-secondary)', fontSize: '1.1rem' }}>No se encontró actividad reciente.</div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
-                    {history.map((item) => (
-                        <Card key={item.id} className="animate-fade-in" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    {item.status === 'SUCCESS' ? <ShieldCheck size={20} color="var(--success)" /> : <XCircle size={20} color="var(--error)" />}
-                                    <span style={{ fontWeight: 600, color: item.status === 'SUCCESS' ? 'var(--success)' : 'var(--error)' }}>
-                                        {item.status === 'SUCCESS' ? 'Inicio de Sesión Exitoso' : 'Intento de Inicio Fallido'}
-                                    </span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                                    <Clock size={14} />
-                                    {new Date(item.createdAt).toLocaleString()}
-                                </div>
-                            </div>
-
-                            <div style={{ flex: 1, marginBottom: '1rem' }}>
-                                <p style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-                                    <strong>IP:</strong> {item.ipAddress || 'Unknown'}
-                                </p>
-                                <p style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem' }}>
-                                    <MapPin size={16} style={{ marginTop: '0.2rem', flexShrink: 0, color: 'var(--primary)' }} />
-                                    <span style={{ flex: 1 }}>{item.location || 'Location Not Available'}</span>
-                                </p>
-                                <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>
-                                    <strong>Dispositivo:</strong> {item.userAgent || 'Desconocido'}
-                                </p>
-                            </div>
-
-                            {item.latitude && item.longitude ? (
-                                <div
-                                    style={{
-                                        height: '150px',
-                                        borderRadius: '0.5rem',
-                                        overflow: 'hidden',
-                                        border: '1px solid var(--border)',
-                                        position: 'relative',
-                                        cursor: 'pointer'
-                                    }}
-                                    onClick={() => openEnlargedMap(item)}
-                                >
-                                    <MapContainer
-                                        center={[item.latitude, item.longitude]}
-                                        zoom={10}
-                                        style={{ height: '100%', width: '100%', pointerEvents: 'none' }} // disable interaction on mini-map
-                                        zoomControl={false}
-                                        dragging={false}
-                                        scrollWheelZoom={false}
-                                        doubleClickZoom={false}
-                                    >
-                                        <TileLayer
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                                        />
-                                        <Marker position={[item.latitude, item.longitude]} />
-                                    </MapContainer>
-                                    <div style={{
-                                        position: 'absolute',
-                                        bottom: '0.5rem',
-                                        right: '0.5rem',
-                                        background: 'rgba(15, 23, 42, 0.8)',
-                                        color: '#fff',
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '0.25rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.25rem',
-                                        fontSize: '0.75rem',
-                                        backdropFilter: 'blur(4px)',
-                                        zIndex: 1000
-                                    }}>
-                                        <Maximize2 size={12} /> Ampliar Mapa
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', width: '100%' }}>
+                    {history.map((item, index) => (
+                        <Card 
+                            key={item.id} 
+                            className="animate-fade-in" 
+                            style={{ 
+                                padding: '1rem 1.5rem', 
+                                display: 'flex', 
+                                gap: '2rem', 
+                                alignItems: 'center', 
+                                minHeight: '100px',
+                                width: '75%',
+                                maxWidth: '1200px',
+                                minWidth: '700px',
+                                margin: 0, 
+                                borderRadius: index === 0 ? '14px 14px 4px 4px' : (index === history.length - 1 ? '4px 4px 14px 14px' : '4px'),
+                                boxShadow: 'none', 
+                                borderBottom: index === history.length - 1 ? '1px solid var(--border)' : 'none'
+                            }}
+                        >
+                            {/* Left Side: Consolidated Details - High Readability */}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {/* Header: Status (Large & Bold) vs Date */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        {item.status === 'SUCCESS' ? <ShieldCheck size={20} color="var(--success)" /> : <XCircle size={20} color="var(--error)" />}
+                                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: item.status === 'SUCCESS' ? 'var(--success)' : 'var(--error)' }}>
+                                            {item.status === 'SUCCESS' ? 'Acceso Autorizado' : 'Fallo de Autenticación'}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                                        <Clock size={16} />
+                                        {new Date(item.createdAt).toLocaleString()}
                                     </div>
                                 </div>
-                            ) : (
-                                <div style={{
-                                    height: '150px',
-                                    borderRadius: '0.5rem',
-                                    border: '1px dashed var(--border)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'var(--text-secondary)',
-                                    fontSize: '0.9rem',
-                                    background: 'rgba(255,255,255,0.02)'
-                                }}>
-                                    Datos del mapa no disponibles
+
+                                {/* Body Information: Expanded Visibility */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 220px) 1.5fr 1fr', gap: '1.5rem', alignItems: 'center' }}>
+                                    <div>
+                                        <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Dirección IP</span>
+                                        <p style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                                            {item.ipAddress || 'Dirección Desconocida'}
+                                        </p>
+                                    </div>
+                                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1.25rem' }}>
+                                        <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Ubicación Física</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <MapPin size={16} color="var(--primary)" />
+                                            <span style={{ fontSize: '1rem', color: 'var(--text-primary)', fontWeight: 500 }}>
+                                                {item.location || 'Localización No Disponible'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1.25rem' }}>
+                                        <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Agente Usuario</span>
+                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', wordBreak: 'break-all', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                            {item.userAgent || 'Desconocido'}
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
+
+                            {/* Right Side: Map Micro-Preview (Interactive) */}
+                            <div
+                                style={{
+                                    width: '150px',
+                                    height: '75px',
+                                    borderRadius: '8px',
+                                    overflow: 'hidden',
+                                    border: '1px solid var(--border)',
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    flexShrink: 0
+                                }}
+                                onClick={() => openEnlargedMap(item)}
+                            >
+                                {item.latitude && item.longitude ? (
+                                    <>
+                                        <MapContainer
+                                            center={[item.latitude, item.longitude]}
+                                            zoom={10}
+                                            style={{ height: '100%', width: '100%', pointerEvents: 'none' }}
+                                            zoomControl={false}
+                                            dragging={false}
+                                            scrollWheelZoom={false}
+                                            doubleClickZoom={false}
+                                        >
+                                            <TileLayer
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                attribution=""
+                                            />
+                                            <Marker position={[item.latitude, item.longitude]} />
+                                        </MapContainer>
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 0, left: 0, right: 0, bottom: 0,
+                                            background: 'rgba(99, 102, 241, 0.1)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            backdropFilter: 'blur(1px)',
+                                            opacity: 0,
+                                            transition: 'opacity 0.2s'
+                                        }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}>
+                                            <Maximize2 size={18} color="#fff" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div style={{ height: '100%', width: '100%', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+                                        Sin Mapa
+                                    </div>
+                                )}
+                            </div>
                         </Card>
                     ))}
                 </div>
             )}
+
+
+
 
             {/* Modal for Enlarged Map */}
             {selectedMap && selectedMap.latitude && selectedMap.longitude && (

@@ -32,7 +32,7 @@ export default function RegisterPage() {
         }
     };
 
-    const handleSocialRegister = (provider: 'google' | 'facebook') => {
+    const handleSocialRegister = (provider: 'google' | 'facebook' | 'github') => {
         window.location.href = `http://localhost:3000/auth/${provider}`;
     }
 
@@ -80,6 +80,9 @@ export default function RegisterPage() {
                 </Button>
                 <Button variant="social" onClick={() => handleSocialRegister('facebook')} type="button">
                     Facebook
+                </Button>
+                <Button variant="social" onClick={() => handleSocialRegister('github')} type="button">
+                    GitHub
                 </Button>
 
                 <p className="text-center mt-4 mb-0" style={{ fontSize: '0.875rem' }}>

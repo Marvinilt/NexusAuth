@@ -48,6 +48,7 @@ model BackupCode {
 enum Provider {
   GOOGLE
   FACEBOOK
+  GITHUB
 }
 
 model LoginLog {

@@ -1,10 +1,10 @@
-# 📘 Documentación Técnica: NexusAuth (v1.0.2)
-**Fecha:** 2026-03-28
+# 📘 Documentación Técnica: NexusAuth (v1.0.4)
+**Fecha:** 2026-03-29
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
 * **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript).
 * **Almacenamiento y Migraciones:** PostgreSQL administrado por Prisma ORM.
-* **Componentes Externos (OAuth):** `passport-google-oauth20` y `passport-facebook` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local.
+* **Componentes Externos (OAuth):** `passport-google-oauth20`, `passport-facebook` y `passport-github2` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local. El proveedor GitHub incluye una lógica secundaria de obtención de correos mediante la API de GitHub para perfiles privados.
 * **MFA (Zero-Cost TOTP):** Utiliza `otplib` para generar *Time-Based One-Time Passwords* apegados a algoritmos y protocolos IETF HOTP (RFC 4226/6238). Los Secretos MFA (`mfa_secret`) jamás se almacenan localmente en texto claro, sino encriptados (AES-256-GCM) usando Node `crypto` y un Vector de Inicialización dinámico.
 * **Notificaciones Outbound (Email):** Implementado vía servicio de entrega `resend` que expone planes sin costo.
 
@@ -63,7 +63,8 @@ sequenceDiagram
 ### 🌍 Social Providers (OAuth2 Auth Code Flow)
 * **`GET /auth/google`**: Init OAuth window.
 * **`GET /auth/facebook`**: Init OAuth window.
-* **Callbacks asociados:** `/auth/google/callback` y `/auth/facebook/callback` respectivamente. Valida o crea un IDP en esquema Prisma `OAuthProvider`. Termina con `oauthCallback` arrojando un JWT válido.
+* **`GET /auth/github`**: Init OAuth window (Solicita scope `user:email`).
+* **Callbacks asociados:** `/auth/google/callback`, `/auth/facebook/callback` y `/auth/github/callback` respectivamente. Valida o crea un IDP en esquema Prisma `OAuthProvider`. Termina con `oauthCallback` arrojando un JWT válido. En el caso de GitHub, si el email no es público, se realiza una petición interna asíncrona a `api.github.com/user/emails`.
 
 ### 🔄 Recovery
 * **`POST /recovery/forgot-password`**: Se consume con un `{ email }`. Dispara `resend.emails.send()`.
@@ -120,7 +121,7 @@ erDiagram
 
 
 1. **`User` (Usuarios):** Almacena el identificador universal, correo (único), *hash* del password (si aplica configuración local), secretos para MFA encriptados y banderas de configuración como `mfaEnabled` o cuentas verificadas.
-2. **`OAuthProvider` (Integraciones Sociales):**  Provee Relación de 1 a muchos (1 usuario a muchas plataformas). Se asocia al `User` a través del `userId`, almacenando de dónde provino la cuenta externa (ej. GOOGLE, FACEBOOK) y el ID externo para login social continuo sin colisiones.
+2. **`OAuthProvider` (Integraciones Sociales):**  Provee Relación de 1 a muchos (1 usuario a muchas plataformas). Se asocia al `User` a través del `userId`, almacenando de dónde provino la cuenta externa (ej. GOOGLE, FACEBOOK, GITHUB) y el ID externo para login social continuo sin colisiones.
 3. **`BackupCode` (Códigos de Recuperación MFA):** Una lista ligada al `User`. Códigos generados en texto plano durante la configuración del MFA para recuperar cuentas en caso de pérdida de un smartphone. Son *consumibles*, una vez utilizados se borran atómicamente del registro base.
 4. **`LoginLog` (Bitácora de Eventos):** Registra cada intento de autenticación individual, asistiéndose mediante validaciones tanto correctas como incorrectas (`SUCCESS` / `FAILED`). Contiene fecha exacta, dirección IP y metadatos complementarios como Agente de Usuario y geolocalización extraída (`latitude`, `longitude`, `location`).
 

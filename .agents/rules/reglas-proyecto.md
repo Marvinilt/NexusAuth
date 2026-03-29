@@ -17,11 +17,12 @@ trigger: always_on
 1. Si ya estas en una rama feature, continua ahí haciendo los cambios en ese branch, no crees ningun otro branch.
 2. Si NO estas en una rama feature, crea en git un nuevo branch del feature correspondiente a partir del branch develop para iniciar el desarrollo de la nueva funcionalidad.
 3. Nunca hagas cambios ni hagas commit sobre el branch develop, tampoco en el branch main, prohibido hacer commit en branch develop o main.
+4. Despues de hacer bastantes cambios pregunta al usuario si desea dar por finalizado el desarrollo.
 
 
 ### Al Finalizar el desarrollo de una funcionalidad
 
-Cuando el usuario indique que ha finalizado el desarrollo realiza siempre las siguientes acciones obligatorias:
+Solo si el usuario indica que ha finalizado el desarrollo, realiza las siguientes acciones obligatorias:
 
     1. Actualiza `Changelog.md` con la nueva funcionalidad desarrollada (fecha y descripción detallada del desarrollo realizado), en orden cronológico inverso. No mezcles todo, agrupa los cambios bajo estos encabezados estándar:
           * Added: Para funciones nuevas.
