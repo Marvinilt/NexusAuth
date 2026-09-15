@@ -59,7 +59,7 @@ export class MfaController {
                 userAgent
             });
 
-            const payload: TokenPayload = { userId: user.userId, email: user.email };
+            const payload: TokenPayload = { userId: user.userId, email: user.email, clientId: user.clientId };
             const fullToken = generateToken(payload);
 
             res.status(200).json({ token: fullToken, user: { id: user.userId, email: user.email, lastLoginAt } });

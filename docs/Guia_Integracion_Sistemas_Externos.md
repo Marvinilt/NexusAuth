@@ -53,19 +53,23 @@ sequenceDiagram
 
 Dado que App B está desarrollada con React y Node.js, sigue estas instrucciones divididas en Frontend y Backend.
 
-### Paso 1: Configuración Global (Compartir el Secreto JWT)
+### Paso 1: Registro del Sistema y Configuración Global
 
-Tanto **NexusAuth** como el Backend de **App B** necesitan conocer la misma clave secreta (`JWT_SECRET`) para que App B pueda validar que el token que envía el usuario fue genuinamente emitido por NexusAuth.
+Para usar NexusAuth, App B debe registrarse en NexusAuth como un cliente autorizado. Esto generará una llave única (`apiKey`). Además, tanto **NexusAuth** como el Backend de **App B** necesitan conocer la misma clave secreta (`JWT_SECRET`) para que App B pueda validar que el token emitido es legítimo.
 
-1. Abre el archivo `.env` de **App B** (Backend).
-2. Agrega la variable con el mismo valor que utilizas en NexusAuth:
+1. **Obtener API Key**: Un administrador debe registrar a App B en NexusAuth realizando un `POST /clients` con el nombre del sistema para obtener el `apiKey`.
+2. Abre el archivo `.env` de **App B** (Backend y Frontend).
+3. Agrega las variables necesarias:
 
 ```env
 # Archivo .env del Backend de App B
 NEXUSAUTH_JWT_SECRET="<aqui_va_el_mismo_secreto_que_tiene_nexusauth>"
+
+# Archivo .env del Frontend de App B
+VITE_NEXUSAUTH_API_KEY="<tu_api_key_obtenida_en_el_paso_1>"
 ```
 
-3. Además, si NexusAuth tiene políticas estrictas de CORS, asegúrate de que el backend de NexusAuth tenga en su lista de orígenes permitidos (CORS whitelist) la URL del frontend de App B (ej: `http://localhost:3000` o su dominio en producción).
+4. Además, asegúrate de que el backend de NexusAuth tenga en su lista de orígenes permitidos (CORS whitelist) la URL del frontend de App B (ej: `http://localhost:3000`).
 
 ---
 
@@ -79,12 +83,16 @@ Crea un archivo de servicio que se comunique con la API de NexusAuth.
 ```javascript
 // src/services/authService.js
 const NEXUSAUTH_API_URL = 'http://localhost:8000/api/auth'; // URL de NexusAuth
+const API_KEY = import.meta.env.VITE_NEXUSAUTH_API_KEY;
 
 export const loginUser = async (email, password) => {
   try {
     const response = await fetch(`${NEXUSAUTH_API_URL}/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY 
+      },
       body: JSON.stringify({ email, password })
     });
 
@@ -107,6 +115,11 @@ export const loginUser = async (email, password) => {
     console.error('Error de Login:', error);
     throw error;
   }
+};
+
+export const loginSocial = (provider) => {
+  // Para OAuth (Google, Facebook, GitHub) se debe pasar la apiKey por query string
+  window.location.href = `${NEXUSAUTH_API_URL}/${provider}?apiKey=${API_KEY}`;
 };
 ```
 
@@ -159,10 +172,14 @@ const verifyNexusAuthToken = (req, res, next) => {
     // 2. Verificar que el token fue firmado por NexusAuth y no ha expirado
     const decoded = jwt.verify(token, NEXUSAUTH_JWT_SECRET);
     
-    // 3. Inyectar la información del usuario en la request (ID, roles, etc.)
+    // 3. (Opcional) Validar que el token pertenece a este cliente específico
+    // const NEXUSAUTH_API_KEY = process.env.NEXUSAUTH_API_KEY;
+    // if (decoded.clientId !== NEXUSAUTH_API_KEY) throw new Error('Token for another tenant');
+
+    // 4. Inyectar la información del usuario en la request (ID, roles, clientId, etc.)
     req.user = decoded; 
     
-    // 4. Continuar al controlador de la ruta
+    // 5. Continuar al controlador de la ruta
     next();
   } catch (error) {
     // Si el token expiró o la firma es inválida
@@ -236,7 +253,8 @@ flowchart TD
 
 ## Resumen de Integración
 
-1. **Variables de entorno:** Compartir el secreto JWT entre los dos backends.
-2. **CORS:** Habilitar a **App B Frontend** para consumir la API de **NexusAuth Backend**.
-3. **Frontend:** El login lo gestiona el frontend de **App B** conectándose directamente al endpoint `/login` de **NexusAuth**.
-4. **Backend:** El backend de **App B** no valida password; solo descifra el token con el middleware para identificar quién realiza la petición.
+1. **API Key (Novedad Multi-Tenant):** App B debe estar registrada en NexusAuth para obtener un `apiKey`, la cual es obligatoria enviar en el header `x-api-key` (o por query string `?apiKey=...` en el caso de OAuth) desde el Frontend.
+2. **Variables de entorno:** Compartir el secreto JWT entre el backend de NexusAuth y el backend de App B.
+3. **CORS:** Habilitar a **App B Frontend** para consumir la API de **NexusAuth Backend**.
+4. **Frontend:** El login lo gestiona el frontend de **App B** conectándose directamente a NexusAuth e inyectando su `apiKey`.
+5. **Backend:** El backend de **App B** no valida passwords; solo descifra el token y confía en la firma criptográfica para autorizar las peticiones, validando opcionalmente si el `clientId` del JWT corresponde a su sistema.

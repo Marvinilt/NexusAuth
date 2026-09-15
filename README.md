@@ -1,6 +1,6 @@
 # 🛡️ NexusAuth
 
-![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)
@@ -11,6 +11,7 @@ NexusAuth es un microservicio de Identidad Centralizada "Zero-Cost" construido c
 
 El sistema soporta autenticación multicanal y multifactor, e incluye las siguientes características principales integradas en un solo microservicio con cliente web frontend en React:
 
+* **Multi-Cliente (Multi-Tenant):** Soporte total para registrar y aislar independientemente múltiples sistemas clientes a través de `API Keys` y listas blancas dinámicas (CORS Whitelisting) por cliente. Un mismo correo electrónico puede coexistir en múltiples sistemas clientes sin colisión.
 * **Login Local:** Autenticación con Email/Password, encripción con Bcrypt y JWT.
 * **Integración Social (OAuth2):** Soporte para Google, Facebook y GitHub. 
 * **MFA (Zero-Cost TOTP):** App Authenticator (Google Authenticator / Authy) con códigos de recuperación. Secretos cifrados con AES-256-GCM.

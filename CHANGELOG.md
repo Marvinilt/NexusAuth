@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-15
+
+### Added
+- **Arquitectura Multi-Cliente (Multi-Tenant):** El sistema ahora soporta el registro y gestión de múltiples sistemas clientes.
+- Nuevo CRUD de clientes bajo la ruta `/clients` para registrar aplicaciones que consumirán NexusAuth.
+- Generación y validación estricta mediante `x-api-key` (o `apiKey` por query) en todas las peticiones de autenticación.
+
+### Changed
+- **Seguridad (CORS Dinámico):** Se reemplazó la política de orígenes abiertos (`*`) por una lista blanca (whitelist) estricta a nivel de Base de Datos, interceptando e inspeccionando cabeceras `Origin` de forma independiente por cada cliente.
+- El inicio de sesión y registro ahora validan usuarios en el contexto de un cliente específico, permitiendo que un mismo correo exista en múltiples sistemas con contraseñas e historiales separados.
+- Los flujos de autenticación social (Google, Facebook, GitHub) han sido adaptados para propagar y respetar el `clientId` usando el parámetro `state` de OAuth.
+- La recuperación de contraseña ahora respeta el contexto Multi-Tenant del usuario.
+
+### Fixed
+- **Manejo de Errores en Registro:** Corrección en `AuthController.register` donde las excepciones de validación en español (formato de correo, complejidad de contraseña y usuario existente) no eran capturadas como `400 Bad Request` y provocaban error `500 Internal Server Error`.
+
 ## [1.0.4] - 2026-03-29
 
 ### Added

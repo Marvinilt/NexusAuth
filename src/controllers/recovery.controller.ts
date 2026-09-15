@@ -15,7 +15,8 @@ export class RecoveryController {
 
             // Await is handled inside, but we always return 200 so we do not
             // expose whether the email exists in the database.
-            await recoveryService.sendRecoveryEmail(email);
+            const clientId = req.client!.id;
+            await recoveryService.sendRecoveryEmail(email, clientId);
 
             res.status(200).json({ message: 'Si el correo existe, se ha enviado un enlace de recuperación' });
         } catch (error: any) {

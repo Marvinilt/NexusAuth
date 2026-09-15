@@ -7,15 +7,15 @@ import { config } from '../config/env';
 const resend = new Resend(process.env.RESEND_API_KEY || 're_mock');
 
 export class RecoveryService {
-    async sendRecoveryEmail(email: string) {
-        const user = await prisma.user.findUnique({ where: { email } });
+    async sendRecoveryEmail(email: string, clientId: string) {
+        const user = await prisma.user.findUnique({ where: { email_clientId: { email, clientId } } });
         if (!user) {
             // Do not reveal that a user doesn't exist just return
             return;
         }
 
         // Generate a 15-minute token specific for password recovery
-        const token = generateToken({ userId: user.id, email: user.email }, '15m');
+        const token = generateToken({ userId: user.id, email: user.email, clientId: user.clientId }, '15m');
 
         // Normally this URL point to a frontend app where the user inputs their new password
         const recoveryUrl = `http://localhost:5173/reset-password?token=${token}`;
