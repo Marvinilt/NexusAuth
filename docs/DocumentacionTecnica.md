@@ -1,5 +1,5 @@
-# 📘 Documentación Técnica: NexusAuth (v1.0.4)
-**Fecha:** 2026-03-29
+# 📘 Documentación Técnica: NexusAuth (v1.1.0)
+**Fecha:** 2026-09-15
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
 * **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript).
@@ -53,12 +53,19 @@ sequenceDiagram
 ## 🌐 Endpoints Principales Disponibles
 
 ### 🔑 Authentication (Local + MFA Lifecycle)
-* **`POST /auth/register`**: Recibe `{ email, password }`. Otorga password hashing y validaciones de complejidad. Si el correo existe arroja error 400.
-* **`POST /auth/login`**: Crea el payload JWT (Session Lifecycle 15 mins). Compara hashes `bcrypt`. Retorna objeto `{ mfaRequired: true, mfaToken: ... }` si el usuario habilitó Two-Factor o un Session-JWT completo.
-* **`POST /mfa/setup`**: Validado mediante Bearer Token. Retorna secret key en crudo + base64 data url enlazando un URI `otpauth://` lista para escanear en apps como Google Authenticator.
+> **Requisito de Multi-Tenancy:** Todos los endpoints requieren que se identifique el sistema cliente que origina la petición, ya sea a través del header `x-api-key` o el parámetro de consulta `apiKey`.
+
+* **`POST /auth/register`**: Recibe `{ email, password }` e identifica el cliente. Otorga password hashing y validaciones de complejidad. Si el correo existe para este cliente, arroja error 400.
+* **`POST /auth/login`**: Crea el payload JWT. Compara hashes `bcrypt`. Retorna objeto `{ mfaRequired: true, mfaToken: ... }` si el usuario habilitó Two-Factor o un Session-JWT completo.
+* **`POST /mfa/setup`**: Validado mediante Bearer Token. Retorna secret key en crudo + base64 data url enlazando un URI `otpauth://` lista para escanear en apps.
 * **`POST /mfa/verify-setup`**: Habilita oficialmente la capa de seguridad adicional y retorna un array pregenerado de 10 llaves de seguridad Offline (Backup Codes) alocados en PostgreSQL.
-* **`POST /mfa/verify-login`**: Requiere payload "auth pending" en headers JWT Auth. Acepta `{ token: XXXXXX }` el cual es verificado considerando el "±30 second drift rule". Da tokens totales.
+* **`POST /mfa/verify-login`**: Requiere payload "auth pending" en headers JWT Auth. Acepta `{ token: XXXXXX }` el cual es verificado. Da tokens totales.
 * **`GET /auth/history`**: Requiere Bearer Token. Retorna los últimos 5 intentos de inicio de sesión (Exitosos y Fallidos) incluyendo metadata de red y ubicación.
+
+### 🏢 Clients (Sistemas Integrados)
+* **`POST /clients`**: Crea un nuevo sistema cliente. Recibe `{ name, allowedOrigins }` y devuelve un `apiKey`.
+* **`GET /clients`**: Lista todos los sistemas clientes registrados.
+* **`DELETE /clients/:id`**: Elimina permanentemente un sistema cliente y, en cascada, todos sus usuarios asociados.
 
 ### 🌍 Social Providers (OAuth2 Auth Code Flow)
 * **`GET /auth/google`**: Init OAuth window.
@@ -76,16 +83,27 @@ Las tablas en el esquema de PostgreSQL administrado con Prisma incluyen las sigu
 
 ```mermaid
 erDiagram
+    clients ||--o{ users : "aloja"
     users ||--o{ oauth_providers : "autentica vía"
     users ||--o{ backup_codes : "posee"
     users ||--o{ login_logs : "registra acceso en"
 
+    clients {
+        String id PK
+        String name
+        String apiKey UK
+        String[] allowedOrigins
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
     users {
         String id PK
-        String email UK
+        String email
         String passwordHash
         Boolean mfaEnabled
         String mfaSecret
+        String clientId FK
         DateTime createdAt
         DateTime updatedAt
     }
@@ -132,6 +150,13 @@ erDiagram
   * **Geolocalización**: Mediante la IP del cliente y la integración con `ip-api.com` (con soporte para resolver localhost al IP del servidor como fallback de dev), se extrae la ciudad, país y coordenadas geográficas.
   * **Visualización Interactiva**: Se dispone de una pantalla exclusiva (`/login-history`) en el frontend que integra tarjetas individuales y mapas en miniatura (`react-leaflet`). Se incluyó un modal para ampliar dicho mapa por evento, para que el usuario identifique fácil e interactivamente accesos no autorizados.
 * **Logging de Servidor**: Usando `winston`, logs asíncronos en consola estandarizados marcan timestamps en eventos críticos tales como `AUTH_INVALID_TOTP` ó `USER_MFA_ACTIVATED`. 
+
+## 🛡️ CORS Dinámico y Multi-Tenancy
+
+Para salvaguardar la arquitectura de múltiples clientes, NexusAuth no utiliza un CORS abierto. 
+En cambio, emplea una **validación en dos capas**:
+1. **Capa HTTP (Preflight)**: El middleware de `cors` consulta la base de datos en tiempo real. Solo si el `Origin` solicitante está en la lista blanca de *algún* cliente de la plataforma, la conexión se permite. Las llamadas Server-to-Server sin cabecera de Origin también son permitidas en esta capa.
+2. **Capa Lógica (Middleware de Auth)**: Incluso superando la capa de red HTTP, el `clientAuthMiddleware` verifica que el `Origin` pertenezca específicamente a la lista `allowedOrigins` del cliente exacto del que se proveyó la llave (`x-api-key`).
 
 ## 🚀 Guía de Migración de Base de Datos (Nuevo Entorno)
 

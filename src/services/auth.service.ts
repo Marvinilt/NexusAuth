@@ -8,7 +8,7 @@ import axios from 'axios';
 type LoginStatus = 'SUCCESS' | 'FAILED';
 
 export class AuthService {
-    async register(email: string, passwordHashRaw: string) {
+    async register(email: string, passwordHashRaw: string, clientId: string) {
         if (!validateEmail(email)) {
             throw new Error('Formato de correo electrónico inválido');
         }
@@ -18,7 +18,7 @@ export class AuthService {
             throw new Error(message);
         }
 
-        const existingUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma.user.findUnique({ where: { email_clientId: { email, clientId } } });
         if (existingUser) {
             throw new Error('El usuario ya existe');
         }
@@ -29,15 +29,16 @@ export class AuthService {
             data: {
                 email,
                 passwordHash: hashedPassword,
+                clientId,
             },
         });
 
         return { id: user.id, email: user.email, mfaEnabled: user.mfaEnabled };
     }
 
-    async login(email: string, passwordRaw: string) {
+    async login(email: string, passwordRaw: string, clientId: string) {
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email_clientId: { email, clientId } },
             include: { oauthProviders: true }
         });
         if (!user || (!user.passwordHash && user.oauthProviders.length > 0)) {
@@ -59,14 +60,14 @@ export class AuthService {
         if (user.mfaEnabled) {
             logger.info(`[AuthService.login] User ${user.email} has MFA enabled. Issuing temporary MFA-pending token.`);
             // Issue a temporary token indicating MFA is pending
-            const payload: TokenPayload = { userId: user.id, email: user.email, mfaPending: true };
+            const payload: TokenPayload = { userId: user.id, email: user.email, clientId, mfaPending: true };
             const mfaToken = generateToken(payload, '15m');
             return { mfaRequired: true, mfaToken, message: 'Se requiere verificación MFA' };
         }
 
         // Standard Login
         logger.info(`[AuthService.login] Generating standard JWT token for user ${user.email} (MFA not enabled).`);
-        const payload: TokenPayload = { userId: user.id, email: user.email };
+        const payload: TokenPayload = { userId: user.id, email: user.email, clientId };
         const token = generateToken(payload);
 
         return { token, user: { id: user.id, email: user.email } };
@@ -113,6 +114,7 @@ export class AuthService {
                 location,
                 latitude,
                 longitude,
+                // TODO: pasamos clientId al logUserLogin, lo dejaremos nulo si no lo tenemos en contexto
             },
         });
 

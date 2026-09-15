@@ -23,6 +23,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_NEXUS_API_KEY || '',
         ...(options.headers as Record<string, string>),
     };
 

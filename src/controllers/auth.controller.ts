@@ -7,6 +7,11 @@ import { prisma } from '../config/prisma';
 const authService = new AuthService();
 
 export class AuthController {
+    /**
+     * Registra un nuevo usuario en la base de datos asociado al cliente autenticado.
+     * @param req - Objeto de solicitud Express con email y contraseña.
+     * @param res - Objeto de respuesta Express.
+     */
     async register(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
@@ -15,18 +20,44 @@ export class AuthController {
                 res.status(400).json({ error: 'El correo y la contraseña son requeridos' });
                 return;
             }
-            const user = await authService.register(email, password);
-            res.status(201).json({ message: 'Usuario registrado exitosamente', user });
-        } catch (error: any) {
-            if (error.message.includes('already exists') || error.message.includes('Invalid') || error.message.includes('Password must')) {
-                res.status(400).json({ error: error.message });
-            } else {
-                logger.error(`Registration error: ${error.message}`);
-                res.status(500).json({ error: 'Error interno del servidor' });
+            const clientId = req.client?.id;
+            if (!clientId) {
+                res.status(400).json({ error: 'Identificador de cliente no disponible' });
+                return;
             }
+            const user = await authService.register(email, password, clientId);
+            res.status(201).json({ message: 'Usuario registrado exitosamente', user });
+        } catch (error: unknown) {
+            const err = error as { message?: string; code?: string };
+            const errorMessage = err.message || '';
+
+            // Conflictos de usuario duplicado (Prisma P2002 o validación interna)
+            if (err.code === 'P2002' || errorMessage.includes('ya existe') || errorMessage.includes('already exists')) {
+                res.status(400).json({ error: 'El usuario ya existe' });
+                return;
+            }
+
+            // Errores de validación de correo y complejidad de contraseña
+            if (
+                errorMessage.includes('Formato de correo') ||
+                errorMessage.includes('contraseña') ||
+                errorMessage.includes('Invalid') ||
+                errorMessage.includes('Password must')
+            ) {
+                res.status(400).json({ error: errorMessage });
+                return;
+            }
+
+            logger.error(`Registration error: ${errorMessage}`);
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 
+    /**
+     * Autentica un usuario con email y contraseña para el cliente actual.
+     * @param req - Objeto de solicitud Express con credenciales de acceso.
+     * @param res - Objeto de respuesta Express.
+     */
     async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
@@ -35,7 +66,12 @@ export class AuthController {
                 res.status(400).json({ error: 'El correo y la contraseña son requeridos' });
                 return;
             }
-            const result = await authService.login(email, password);
+            const clientId = req.client?.id;
+            if (!clientId) {
+                res.status(400).json({ error: 'Identificador de cliente no disponible' });
+                return;
+            }
+            const result = await authService.login(email, password, clientId);
 
             if (!result.mfaRequired && result.user) {
                 const ipAddress = req.ip || req.socket.remoteAddress;
@@ -49,10 +85,14 @@ export class AuthController {
             }
 
             res.status(200).json(result);
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { message?: string };
+            const errorMessage = err.message || '';
+
             // Log local failure if we can find the user
             try {
-                const tempUser = await prisma.user.findUnique({ where: { email: req.body.email } });
+                const clientId = req.client?.id;
+                const tempUser = clientId ? await prisma.user.findUnique({ where: { email_clientId: { email: req.body.email, clientId } } }) : null;
                 if (tempUser) {
                     await authService.logUserLogin(tempUser.id, {
                         status: 'FAILED',
@@ -64,15 +104,20 @@ export class AuthController {
                 logger.error(`Failed to log failed login: ${logErr}`);
             }
 
-            if (error.message === 'Credenciales inválidas') {
-                res.status(401).json({ error: error.message });
+            if (errorMessage === 'Credenciales inválidas' || errorMessage === 'Invalid credentials') {
+                res.status(401).json({ error: errorMessage });
             } else {
-                logger.error(`Login error: ${error.message}`);
+                logger.error(`Login error: ${errorMessage}`);
                 res.status(500).json({ error: 'Error interno del servidor' });
             }
         }
     }
 
+    /**
+     * Procesa la redirección y autenticación exitosa desde proveedores OAuth (Google, Facebook, GitHub).
+     * @param req - Objeto de solicitud Express con el usuario autenticado por Passport.
+     * @param res - Objeto de respuesta Express para redirección.
+     */
     async oauthCallback(req: Request, res: Response): Promise<void> {
         if (!req.user) {
             logger.error(`[AuthController.oauthCallback] Authentication failed to return an OAuth user object`);
@@ -84,7 +129,7 @@ export class AuthController {
         logger.info(`[AuthController.oauthCallback] Handling successful OAuth callback for user: ${authUser.email}`);
 
         if (authUser.mfaEnabled) {
-            const payload: TokenPayload = { userId: authUser.id, email: authUser.email, mfaPending: true };
+            const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId, mfaPending: true };
             const mfaToken = generateToken(payload, '15m');
             // Redirect to frontend's MFA verification page with the temporary token
             res.redirect(`http://localhost:5173/mfa-verify?mfaToken=${mfaToken}`);
@@ -99,7 +144,7 @@ export class AuthController {
             userAgent
         });
 
-        const payload: TokenPayload = { userId: authUser.id, email: authUser.email };
+        const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId };
         const token = generateToken(payload);
         const userData = JSON.stringify({ id: authUser.id, email: authUser.email, lastLoginAt });
 
@@ -107,12 +152,17 @@ export class AuthController {
         res.redirect(`http://localhost:5173/oauth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
     }
 
+    /**
+     * Obtiene el historial de accesos del usuario autenticado actual.
+     * @param req - Objeto de solicitud Express con datos del token verificado.
+     * @param res - Objeto de respuesta Express.
+     */
     async getHistory(req: Request, res: Response): Promise<void> {
         try {
             const user = (req as any).user;
             const history = await authService.getLoginHistory(user.userId);
             res.json(history);
-        } catch (error: any) {
+        } catch (error: unknown) {
             res.status(500).json({ error: 'Error al obtener el historial' });
         }
     }

@@ -7,18 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Client {
+  id             String   @id @default(uuid())
+  name           String
+  apiKey         String   @unique @default(uuid())
+  allowedOrigins String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  loginLogs LoginLog[]
+
+  @@map("clients")
+}
+
 model User {
   id             String          @id @default(uuid())
-  email          String          @unique
+  email          String
   passwordHash   String?
   mfaEnabled     Boolean         @default(false)
   mfaSecret      String?
+  clientId       String
+  client         Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   oauthProviders OAuthProvider[]
   backupCodes    BackupCode[]
   loginLogs      LoginLog[]
 
+  @@unique([email, clientId])
   @@map("users")
 }
 
@@ -61,6 +77,8 @@ model LoginLog {
   longitude Float?
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
   createdAt DateTime    @default(now())
 
   @@map("login_logs")
