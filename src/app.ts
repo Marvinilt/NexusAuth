@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes';
 import mfaRoutes from './routes/mfa.routes';
 import recoveryRoutes from './routes/recovery.routes';
 import clientRoutes from './routes/client.routes';
+import adminRoutes from './routes/admin.routes';
 import passport from 'passport';
 import { configurePassport } from './config/passport';
 
@@ -21,6 +22,11 @@ app.use(cors(async (req, callback) => {
     
     // Server-to-Server calls without origin
     if (!origin) return callback(null, { origin: true });
+
+    // En desarrollo, permitir peticiones desde localhost
+    if (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        return callback(null, { origin: true });
+    }
     
     try {
         const clientWithOrigin = await prisma.client.findFirst({
@@ -36,8 +42,8 @@ app.use(cors(async (req, callback) => {
         } else {
             callback(new Error('CORS: Origen no autorizado'));
         }
-    } catch (e: any) {
-        callback(e);
+    } catch (e: unknown) {
+        callback(e instanceof Error ? e : new Error('CORS Error'));
     }
 }));
 app.use(express.json());
@@ -53,6 +59,7 @@ app.use('/auth', authRoutes);
 app.use('/mfa', mfaRoutes);
 app.use('/recovery', recoveryRoutes);
 app.use('/clients', clientRoutes);
+app.use('/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

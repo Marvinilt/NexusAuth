@@ -1,6 +1,6 @@
 # 🛡️ NexusAuth
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)
@@ -11,7 +11,12 @@ NexusAuth es un microservicio de Identidad Centralizada "Zero-Cost" construido c
 
 El sistema soporta autenticación multicanal y multifactor, e incluye las siguientes características principales integradas en un solo microservicio con cliente web frontend en React:
 
+* **Panel de Administración Multicliente:** Consola centralizada protegida por rol de Super Administrador con menú lateral interactivo:
+  * **Mantenimiento de Clientes:** Listado, alta de nuevos sistemas cliente, visualización protegida de credenciales, rotación/regeneración de API Keys y eliminación.
+  * **Dashboard de Estadísticas:** Analítica en tiempo real filtrada por cliente y rangos de fecha (hoy, 7 días, 30 días, manual), desglose de tipo de registro (Email vs Redes Sociales), cambios de contraseña y tasa de adopción de MFA/2FA.
+  * **Logs de Auditoría Multicliente:** Auditoría completa de accesos con selector de cliente, buscador por email de usuario, filtrado por estado y visualización de IP, navegador y geolocalización.
 * **Multi-Cliente (Multi-Tenant):** Soporte total para registrar y aislar independientemente múltiples sistemas clientes a través de `API Keys` y listas blancas dinámicas (CORS Whitelisting) por cliente. Un mismo correo electrónico puede coexistir en múltiples sistemas clientes sin colisión.
+* **Auditoría de Contraseñas:** Control de fecha de último cambio de contraseña (`passwordChangedAt`) y bitácora detallada de cambios (`PasswordChangeLog`).
 * **Login Local:** Autenticación con Email/Password, encripción con Bcrypt y JWT.
 * **Integración Social (OAuth2):** Soporte para Google, Facebook y GitHub. 
 * **MFA (Zero-Cost TOTP):** App Authenticator (Google Authenticator / Authy) con códigos de recuperación. Secretos cifrados con AES-256-GCM.
@@ -43,6 +48,9 @@ Necesitarás configurar las variables de entorno principales. Copia y modifica `
 ```env
 # URL de la base de datos PostgreSQL
 DATABASE_URL="postgresql://usuario:password@localhost:5432/nexusauth?schema=public"
+
+# Super Administrador (acceso al panel multicliente)
+SUPERADMIN_EMAIL="admin@nexusauth.com"
 
 # Llave maestra para firmas y cifrados (JWT, Encripción MFA)
 JWT_SECRET="tusecreoaqui_minimo_32_caracteres"
@@ -78,7 +86,11 @@ GITHUB_CALLBACK_URL="http://localhost:3000/auth/github/callback"
 2. Inicializa las tablas de la base de datos a través de Prisma:
    ```bash
    npx prisma generate
-   npx prisma migrate dev
+   npx prisma db push
+   ```
+3. (Opcional) Genera datos ficticios multicliente para pruebas de clientes, estadísticas y logs:
+   ```bash
+   npm run seed:demo
    ```
 
 ## ⚡ Guía de Uso Rápido

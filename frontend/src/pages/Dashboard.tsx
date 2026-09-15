@@ -4,7 +4,7 @@ import { api, ApiError } from '../api';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { ShieldAlert, LogOut, CodeSquare, Clock } from 'lucide-react';
+import { ShieldAlert, LogOut, CodeSquare, Clock, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function Dashboard() {
     const { user, logout } = useAuth();
@@ -75,6 +75,48 @@ export default function Dashboard() {
                 <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto', opacity: 0.8 }}>
                     Bienvenido, {user?.email}. Administra tu seguridad y actividad.
                 </p>
+
+                {user?.isSuperAdmin && (
+                    <div style={{
+                        marginTop: '1.25rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1.5rem',
+                        padding: '0.85rem 1.5rem',
+                        background: 'rgba(99, 102, 241, 0.1)',
+                        border: '1px solid rgba(99, 102, 241, 0.3)',
+                        borderRadius: '12px',
+                        maxWidth: '650px',
+                        width: '100%'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textAlign: 'left' }}>
+                            <ShieldCheck size={24} color="var(--primary)" />
+                            <div>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    Consola de Super Administrador
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    Gestiona sistemas clientes, monitorea estadísticas y audita logs multicliente.
+                                </div>
+                            </div>
+                        </div>
+                        <Button
+                            onClick={() => window.location.href = '/admin/clients'}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.85rem',
+                                width: 'auto',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Ir a Consola <ArrowRight size={14} />
+                        </Button>
+                    </div>
+                )}
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>

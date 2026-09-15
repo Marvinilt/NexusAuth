@@ -3,6 +3,7 @@ import { hashPassword, comparePassword } from '../utils/crypto';
 import { generateToken, TokenPayload } from '../utils/jwt';
 import { validateEmail, validatePasswordComplexity } from '../utils/validation';
 import { logger } from '../config/logger';
+import { config } from '../config/env';
 import axios from 'axios';
 
 type LoginStatus = 'SUCCESS' | 'FAILED';
@@ -56,21 +57,23 @@ export class AuthService {
 
         logger.info(`[AuthService.login] Local login credentials verified for user: ${user.id} (${user.email})`);
 
+        const isSuperAdmin = user.email.toLowerCase() === config.superAdminEmail.toLowerCase();
+
         // Check if MFA is enabled
         if (user.mfaEnabled) {
             logger.info(`[AuthService.login] User ${user.email} has MFA enabled. Issuing temporary MFA-pending token.`);
             // Issue a temporary token indicating MFA is pending
-            const payload: TokenPayload = { userId: user.id, email: user.email, clientId, mfaPending: true };
+            const payload: TokenPayload = { userId: user.id, email: user.email, clientId, mfaPending: true, isSuperAdmin };
             const mfaToken = generateToken(payload, '15m');
             return { mfaRequired: true, mfaToken, message: 'Se requiere verificación MFA' };
         }
 
         // Standard Login
         logger.info(`[AuthService.login] Generating standard JWT token for user ${user.email} (MFA not enabled).`);
-        const payload: TokenPayload = { userId: user.id, email: user.email, clientId };
+        const payload: TokenPayload = { userId: user.id, email: user.email, clientId, isSuperAdmin };
         const token = generateToken(payload);
 
-        return { token, user: { id: user.id, email: user.email } };
+        return { token, user: { id: user.id, email: user.email, isSuperAdmin } };
     }
 
     async logUserLogin(userId: string, options: {

@@ -25,6 +25,11 @@ export class RecoveryController {
         }
     }
 
+    /**
+     * Restablece la contraseña utilizando el token provisto.
+     * @param req - Objeto de solicitud Express con token y newPassword en el body.
+     * @param res - Objeto de respuesta Express.
+     */
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { token, newPassword } = req.body;
@@ -33,10 +38,14 @@ export class RecoveryController {
                 return;
             }
 
-            const result = await recoveryService.resetPassword(token, newPassword);
+            const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || req.ip;
+            const userAgent = req.headers['user-agent'];
+
+            const result = await recoveryService.resetPassword(token, newPassword, { ipAddress, userAgent });
             res.status(200).json(result);
-        } catch (error: any) {
-            res.status(400).json({ error: error.message || 'Ocurrió un error al restablecer la contraseña' });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Ocurrió un error al restablecer la contraseña';
+            res.status(400).json({ error: message });
         }
     }
 }

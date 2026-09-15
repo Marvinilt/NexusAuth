@@ -3,6 +3,7 @@ import { MfaService } from '../services/mfa.service';
 import { logger } from '../config/logger';
 import { generateToken, TokenPayload } from '../utils/jwt';
 import { AuthService } from '../services/auth.service';
+import { config } from '../config/env';
 
 const mfaService = new MfaService();
 const authService = new AuthService();
@@ -59,10 +60,11 @@ export class MfaController {
                 userAgent
             });
 
-            const payload: TokenPayload = { userId: user.userId, email: user.email, clientId: user.clientId };
+            const isSuperAdmin = user.email.toLowerCase() === config.superAdminEmail.toLowerCase();
+            const payload: TokenPayload = { userId: user.userId, email: user.email, clientId: user.clientId, isSuperAdmin };
             const fullToken = generateToken(payload);
 
-            res.status(200).json({ token: fullToken, user: { id: user.userId, email: user.email, lastLoginAt } });
+            res.status(200).json({ token: fullToken, user: { id: user.userId, email: user.email, lastLoginAt, isSuperAdmin } });
 
         } catch (error: any) {
             const user = (req as any).user;

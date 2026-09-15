@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-15
+
+### Added
+- **Panel de Administración Multicliente en Frontend:**
+  - Nuevo layout administrativo (`AdminLayout`) con menú lateral, acceso a módulos, indicadores de rol Super Administrador y navegación intuitiva.
+  - **Mantenimiento de Clientes (`ClientsPage`):** Visualización de clientes, copia y visualización protegida de API Keys, alta de aplicaciones clientes, regeneración de credenciales con invalidación de anteriores y eliminación.
+  - **Dashboard de Estadísticas (`StatisticsPage`):** Métricas consolidadas por cliente con filtros de rango de calendario (día actual, 7 días, 30 días, rango manual), conteo de usuarios registrados, cambios de contraseña, tasa de adopción de MFA/2FA, tasa de éxito en accesos y desglose de tipo de registro (Email/Contraseña vs Social OAuth2).
+  - **Logs de Auditoría Multicliente (`LogsPage`):** Visualizador de bitácora con filtro por sistema cliente, buscador predictivo por correo de usuario, filtro por estado (Exitoso/Fallido) y límite de registros.
+- **Auditoría de Cambios de Contraseña:**
+  - Modelo `PasswordChangeLog` en `prisma/schema.prisma` para registrar IP, User Agent, fecha y cliente en cada cambio de contraseña.
+  - Campo `passwordChangedAt` en el modelo `User` para control histórico y soporte a futuro de políticas de expiración.
+- **Seguridad Super Administrador:**
+  - Middleware `requireSuperAdmin` para validar privilegios en el backend según la variable de entorno `SUPERADMIN_EMAIL`.
+  - Inyección del atributo `isSuperAdmin` en el token JWT y en la sesión del frontend.
+- **Nuevos Endpoints de Backend:**
+  - `POST /clients/:id/regenerate-key`: Rotación y emisión de nuevo API Key.
+  - `GET /admin/stats`: Métricas analíticas agregadas con soporte multicliente y rangos de fecha.
+  - `GET /admin/logs`: Bitácora de accesos con filtros por cliente, correo y estado.
+- **Datos de Prueba y Testing:**
+  - Script `npm run seed:demo` (`prisma/seed-demo.ts`) para poblar la base de datos con dos sistemas cliente ficticios, 10 usuarios y 33 registros de log variados.
+  - Suite de tests unitarios para autenticación y tokens Super Administrador (`tests/admin.test.ts`).
+
+### Changed
+- Las rutas bajo `/clients` ahora requieren privilegios de Super Administrador mediante `requireSuperAdmin`.
+- `RecoveryService.resetPassword` ahora actualiza `passwordChangedAt` y genera automáticamente un registro en `PasswordChangeLog`.
+- `src/app.ts` monta el enrutador administrativo bajo `/admin`.
+
+### Security
+- Aislamiento estricto de endpoints de gestión administrativa (`/admin/*` y `/clients/*`) mediante validación de firma JWT y comparación contra el email de Super Administrador autorizado.
+
 ## [1.1.0] - 2026-09-15
 
 ### Added

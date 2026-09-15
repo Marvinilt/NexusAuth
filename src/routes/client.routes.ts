@@ -1,13 +1,16 @@
 import { Router } from 'express';
 import { ClientController } from '../controllers/client.controller';
+import { requireSuperAdmin } from '../middlewares/superAdmin.middleware';
 
 const router = Router();
 const clientController = new ClientController();
 
-// Nota: En un entorno de producción real, estas rutas deberían estar protegidas
-// por un middleware de "Super Admin" para evitar que cualquiera cree sistemas clientes.
+// Todas las operaciones de gestión de clientes requieren privilegios de Super Administrador
+router.use(requireSuperAdmin);
+
 router.post('/', clientController.create);
 router.get('/', clientController.list);
+router.post('/:id/regenerate-key', clientController.regenerateKey);
 router.delete('/:id', clientController.delete);
 
 export default router;

@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src --ext ts",
-    "test": "ts-node tests/validation.test.ts"
+    "test": "ts-node tests/index.ts",
+    "seed:demo": "ts-node prisma/seed-demo.ts"
   },
   "repository": {
     "type": "git",
