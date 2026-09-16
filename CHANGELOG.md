@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Suite de tests en `tests/admin.test.ts` que valida el control de acceso y rechazo de usuarios regulares (403 Forbidden) y autorización de Super Administradores en las rutas `/admin/users` y `/admin/users/:id/reset-mfa`.
 
 ### Changed
+- **Simplificación y Galería Visual en `README.md`:**
+  - Reducción sustancial de la descripción funcional a un resumen de alto nivel conciso y profesional.
+  - Inclusión de capturas de pantalla reales en alta resolución del flujo de login, consola de clientes, directorio de usuarios y analítica en tiempo real (`docs/screenshots/`).
 - **Estabilidad de Proceso y Reinicio en Desarrollo (`package.json` & `src/index.ts`):**
   - Configuración de `nodemon` ignorando rutas `logs/*` y `tests/*` con debounce de 1000ms para evitar reinicios en cascada por escritura de logs de Winston en Windows.
   - Manejo universal de señales de apagado (`SIGTERM`, `SIGINT`, `SIGUSR2`) con cierre controlado de conexiones y salida limpia (`exit 0`).
