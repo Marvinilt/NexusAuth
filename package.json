@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "npx nodemon --watch src --ext ts --delay 500ms --exec ts-node --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src --ext ts",
-    "test": "ts-node tests/validation.test.ts"
+    "test": "ts-node tests/index.ts",
+    "seed:demo": "ts-node prisma/seed-demo.ts"
   },
   "repository": {
     "type": "git",

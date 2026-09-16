@@ -4,6 +4,7 @@ interface User {
     id: string;
     email: string;
     lastLoginAt?: string;
+    isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {

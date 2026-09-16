@@ -16,12 +16,13 @@ export function Button({
 }: ButtonProps) {
     const baseClass = 'btn';
     const variantClass = `btn-${variant}`;
-    const loadingClass = loading ? 'opacity-70 cursor-not-allowed' : '';
+    const loadingClass = loading ? 'opacity-70 cursor-not-allowed pointer-events-none' : '';
 
     return (
         <button
             className={`${baseClass} ${variantClass} ${loadingClass} ${className}`}
-            disabled={disabled || loading}
+            disabled={disabled}
+            aria-disabled={disabled || loading}
             {...props}
         >
             {loading && <Loader2 className="animate-spin" size={18} />}

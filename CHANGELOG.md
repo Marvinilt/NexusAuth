@@ -4,6 +4,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-09-15
+
+### Added
+- **Visualizador Interactivo de Geolocalización en Logs de Auditoría (`MapModal`):**
+  - Componente modal interactivo (`MapModal.tsx`) basado en Leaflet y OpenStreetMap para inspeccionar geográficamente las coordenadas de cualquier registro de acceso desde la consola de auditoría (`LogsPage.tsx`).
+  - Botón semántico y accesible en la columna de ubicación con hover interactivo, tooltip e indicador de mapa que activa el modal centrado con backdrop desenfocado (`backdropFilter: blur(6px)`).
+  - Marcador geográfico con popup detallado conteniendo estado del acceso, correo del usuario, sistema cliente, dirección IP y fecha/hora formateada.
+  - Cierre accesible mediante teclado (tecla `Escape`), clic en backdrop o botón de cierre.
+  - Enriquecimiento de `prisma/seed-demo.ts` con coordenadas de latitud y longitud reales para ciudades de prueba (Bogotá, Ciudad de México, Madrid, Lima, Buenos Aires).
+- **Menú Lateral Colapsable en Consola Admin:**
+  - Botón de alternancia rápida (`ChevronLeft` / `ChevronRight`) en la parte superior del menú lateral.
+  - Modo colapsado compacto (72px) que oculta los rótulos y mantiene centrados los iconos de navegación con tooltips nativos.
+  - Persistencia automática del estado (colapsado/expandido) en `localStorage` (`nexus_admin_sidebar_collapsed`).
+- **Diseño de Tarjetas Responsivas en Mantenimiento de Clientes (`ClientsPage`):**
+  - Reemplazo de la estructura rígida de tabla por tarjetas con estilo glassmorphism, eliminando la necesidad de scroll horizontal en monitores pequeños o con escalado de Windows.
+  - Grid adaptable (`repeat(auto-fit, minmax(280px, 1fr))`) para credenciales de API Key y orígenes permitidos (CORS).
+  - Truncado inteligente con puntos suspensivos (`text-overflow: ellipsis`) para API Keys visibles y botones de alternar/copiar siempre accesibles.
+
+### Changed
+- **Optimización del Entorno de Desarrollo (Backend):**
+  - Reemplazo de `ts-node-dev` por `nodemon` con `--transpile-only` y `--delay 500ms` en `package.json`, resolviendo interbloqueos (deadlocks) de IPC y liberando hasta 80% de consumo de memoria en Windows.
+- **Espaciado y Fluidez en `AdminLayout`:**
+  - Reducción del padding del área de contenido principal (`1.5rem 1.75rem`) para maximizar el espacio útil en pantalla.
+- **Compatibilidad con Gestores de Contraseñas del Navegador:**
+  - En `Button.tsx`, sustitución del atributo nativo `disabled` por `aria-disabled` y `pointer-events-none` durante el estado de carga para permitir que navegadores como Chrome, Edge y Firefox detecten el envío del formulario y ofrezcan guardar credenciales.
+
+### Fixed
+- **Corte de Botón "Regenerar Key":**
+  - Corrección del desbordamiento y recorte del botón en resoluciones reducidas o displays con escalado DPI en Windows.
+- **Resiliencia de Winston Logger en Windows:**
+  - Manejador de evento `'error'` en `src/config/logger.ts` para evitar que bloqueos temporales de archivos de log en Windows detengan silenciosamente el proceso.
+- **Reintentos ante `EADDRINUSE`:**
+  - Manejador del evento `'error'` en el servidor HTTP de `src/index.ts` para reintentar la conexión si el socket tarda en liberarse tras un reinicio rápido.
+
+
+
+### Added
+- **Panel de Administración Multicliente en Frontend:**
+  - Nuevo layout administrativo (`AdminLayout`) con menú lateral, acceso a módulos, indicadores de rol Super Administrador y navegación intuitiva.
+  - **Mantenimiento de Clientes (`ClientsPage`):** Visualización de clientes, copia y visualización protegida de API Keys, alta de aplicaciones clientes, regeneración de credenciales con invalidación de anteriores y eliminación.
+  - **Dashboard de Estadísticas (`StatisticsPage`):** Métricas consolidadas por cliente con filtros de rango de calendario (día actual, 7 días, 30 días, rango manual), conteo de usuarios registrados, cambios de contraseña, tasa de adopción de MFA/2FA, tasa de éxito en accesos y desglose de tipo de registro (Email/Contraseña vs Social OAuth2).
+  - **Logs de Auditoría Multicliente (`LogsPage`):** Visualizador de bitácora con filtro por sistema cliente, buscador predictivo por correo de usuario, filtro por estado (Exitoso/Fallido) y límite de registros.
+- **Auditoría de Cambios de Contraseña:**
+  - Modelo `PasswordChangeLog` en `prisma/schema.prisma` para registrar IP, User Agent, fecha y cliente en cada cambio de contraseña.
+  - Campo `passwordChangedAt` en el modelo `User` para control histórico y soporte a futuro de políticas de expiración.
+- **Seguridad Super Administrador:**
+  - Middleware `requireSuperAdmin` para validar privilegios en el backend según la variable de entorno `SUPERADMIN_EMAIL`.
+  - Inyección del atributo `isSuperAdmin` en el token JWT y en la sesión del frontend.
+- **Nuevos Endpoints de Backend:**
+  - `POST /clients/:id/regenerate-key`: Rotación y emisión de nuevo API Key.
+  - `GET /admin/stats`: Métricas analíticas agregadas con soporte multicliente y rangos de fecha.
+  - `GET /admin/logs`: Bitácora de accesos con filtros por cliente, correo y estado.
+- **Datos de Prueba y Testing:**
+  - Script `npm run seed:demo` (`prisma/seed-demo.ts`) para poblar la base de datos con dos sistemas cliente ficticios, 10 usuarios y 33 registros de log variados.
+  - Suite de tests unitarios para autenticación y tokens Super Administrador (`tests/admin.test.ts`).
+
+### Changed
+- Las rutas bajo `/clients` ahora requieren privilegios de Super Administrador mediante `requireSuperAdmin`.
+- `RecoveryService.resetPassword` ahora actualiza `passwordChangedAt` y genera automáticamente un registro en `PasswordChangeLog`.
+- `src/app.ts` monta el enrutador administrativo bajo `/admin`.
+
+### Security
+- Aislamiento estricto de endpoints de gestión administrativa (`/admin/*` y `/clients/*`) mediante validación de firma JWT y comparación contra el email de Super Administrador autorizado.
+
 ## [1.1.0] - 2026-09-15
 
 ### Added

@@ -47,10 +47,13 @@ export default function RegisterPage() {
 
                 {error && <div className="error-text mb-4 text-center">{error}</div>}
 
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} method="post">
                     <Input
                         label="Correo electrónico"
                         type="email"
+                        name="email"
+                        id="register-email"
+                        autoComplete="username"
                         placeholder="tu@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -60,6 +63,9 @@ export default function RegisterPage() {
                     <Input
                         label="Contraseña"
                         type="password"
+                        name="password"
+                        id="register-password"
+                        autoComplete="new-password"
                         placeholder="Debe tener al menos 12 caracteres"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

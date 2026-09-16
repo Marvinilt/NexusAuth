@@ -42,11 +42,19 @@ export class RecoveryService {
         }
     }
 
-    async resetPassword(token: string, newPasswordRaw: string) {
-        let payload: any;
+    /**
+     * Restablece la contraseña del usuario utilizando un token de recuperación válido.
+     * Actualiza la fecha de cambio y registra un evento en la bitácora de auditoría.
+     * @param token - Token JWT de recuperación recibido por el usuario.
+     * @param newPasswordRaw - Nueva contraseña en texto plano para hashear.
+     * @param meta - Metadatos opcionales de la petición (IP y User Agent).
+     * @returns Objeto indicando el resultado exitoso.
+     */
+    async resetPassword(token: string, newPasswordRaw: string, meta?: { ipAddress?: string; userAgent?: string }): Promise<{ success: boolean }> {
+        let payload: { userId: string };
         try {
-            payload = verifyToken(token);
-        } catch (error) {
+            payload = verifyToken(token) as { userId: string };
+        } catch {
             throw new Error('Token de recuperación inválido o expirado');
         }
 
@@ -56,11 +64,26 @@ export class RecoveryService {
         }
 
         const hashedPassword = await hashPassword(newPasswordRaw);
+        const now = new Date();
 
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { passwordHash: hashedPassword }
-        });
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    passwordHash: hashedPassword,
+                    passwordChangedAt: now
+                }
+            }),
+            prisma.passwordChangeLog.create({
+                data: {
+                    userId: user.id,
+                    clientId: user.clientId,
+                    ipAddress: meta?.ipAddress,
+                    userAgent: meta?.userAgent,
+                    createdAt: now
+                }
+            })
+        ]);
 
         return { success: true };
     }

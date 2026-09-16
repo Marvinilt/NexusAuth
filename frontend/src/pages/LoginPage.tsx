@@ -34,8 +34,10 @@ export default function LoginPage() {
                 navigate('/dashboard');
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof ApiError) {
+                setError(err.message);
+            } else if (err instanceof Error) {
                 setError(err.message);
             } else {
                 setError('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
@@ -61,12 +63,15 @@ export default function LoginPage() {
 
                 {error && <div className="error-text mb-4 text-center">{error}</div>}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} method="post" action="/dashboard">
                     <div style={{ position: 'relative' }}>
                         <Mail className="lucide-icon" size={18} style={{ position: 'absolute', top: '38px', left: '12px', color: 'var(--text-secondary)' }} />
                         <Input
                             label="Correo electrónico"
                             type="email"
+                            name="email"
+                            id="email"
+                            autoComplete="username"
                             placeholder="tu@ejemplo.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -80,6 +85,9 @@ export default function LoginPage() {
                         <Input
                             label="Contraseña"
                             type="password"
+                            name="password"
+                            id="password"
+                            autoComplete="current-password"
                             placeholder="Ingresa tu contraseña"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

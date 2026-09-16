@@ -7,6 +7,7 @@ export interface TokenPayload {
     email: string;
     clientId: string;
     mfaPending?: boolean;
+    isSuperAdmin?: boolean;
 }
 
 import { SignOptions } from 'jsonwebtoken';
@@ -24,8 +25,9 @@ export const verifyToken = (token: string): TokenPayload => {
         // Si queremos ser estrictos, podemos validar el aud, 
         // pero por ahora el decoded lo tendra en aud y clientId
         return decoded;
-    } catch (error: any) {
-        logger.error(`JWT_VERIFY_ERROR: ${error.message} - Token start: ${token ? token.substring(0, 15) : 'null'}`);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        logger.error(`JWT_VERIFY_ERROR: ${message} - Token start: ${token ? token.substring(0, 15) : 'null'}`);
         throw new Error('Token inválido o expirado');
     }
 };
