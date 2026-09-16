@@ -10,5 +10,7 @@ router.use(requireSuperAdmin);
 
 router.get('/stats', adminController.getStats);
 router.get('/logs', adminController.getLogs);
+router.get('/users', adminController.getUsers);
+router.post('/users/:id/reset-mfa', adminController.resetUserMfa);
 
 export default router;

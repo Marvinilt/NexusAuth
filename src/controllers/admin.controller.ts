@@ -192,4 +192,134 @@ export class AdminController {
             res.status(500).json({ error: 'Error interno al consultar logs de auditoría' });
         }
     }
+
+    /**
+     * Obtiene el listado de usuarios con soporte de filtros multicliente, búsqueda por email y límite.
+     * Ordenados cronológicamente desde los más recientes primero.
+     * @param req - Objeto de solicitud Express con clientId, email y limit en query params.
+     * @param res - Objeto de respuesta Express.
+     */
+    async getUsers(req: Request, res: Response): Promise<void> {
+        try {
+            const clientId = req.query.clientId as string | undefined;
+            const email = req.query.email as string | undefined;
+            const limit = Math.min(Number(req.query.limit) || 50, 200);
+
+            const whereClause: Prisma.UserWhereInput = {};
+
+            if (clientId && clientId !== 'all') {
+                whereClause.clientId = clientId;
+            }
+
+            if (email && email.trim() !== '') {
+                whereClause.email = {
+                    contains: email.trim(),
+                    mode: 'insensitive'
+                };
+            }
+
+            const users = await prisma.user.findMany({
+                where: whereClause,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    email: true,
+                    clientId: true,
+                    passwordHash: true,
+                    mfaEnabled: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    passwordChangedAt: true,
+                    client: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    },
+                    oauthProviders: {
+                        select: {
+                            provider: true
+                        }
+                    },
+                    loginLogs: {
+                        where: { status: 'SUCCESS' },
+                        take: 1,
+                        orderBy: { createdAt: 'desc' },
+                        select: {
+                            createdAt: true
+                        }
+                    }
+                }
+            });
+
+            // Mapear resultado seguro sin hashes ni secretos
+            const formattedUsers = users.map(u => ({
+                id: u.id,
+                email: u.email,
+                clientId: u.clientId,
+                clientName: u.client?.name || 'NexusAuth Directo',
+                mfaEnabled: u.mfaEnabled,
+                createdAt: u.createdAt,
+                updatedAt: u.updatedAt,
+                passwordChangedAt: u.passwordChangedAt,
+                lastLoginAt: u.loginLogs[0]?.createdAt || null,
+                oauthProviders: u.oauthProviders.map(p => p.provider),
+                hasPassword: Boolean(u.passwordHash)
+            }));
+
+            res.status(200).json(formattedUsers);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error desconocido';
+            logger.error(`[AdminController] Error al consultar usuarios: ${message}`);
+            res.status(500).json({ error: 'Error interno al consultar el directorio de usuarios' });
+        }
+    }
+
+    /**
+     * Reinicia el factor de doble autenticación (MFA/2FA) de un usuario específico.
+     * Remueve el secreto TOTP cifrado y desactiva mfaEnabled.
+     * @param req - Objeto de solicitud Express con el ID del usuario en params.
+     * @param res - Objeto de respuesta Express.
+     */
+    async resetUserMfa(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.params.id;
+
+            if (!userId) {
+                res.status(400).json({ error: 'El identificador de usuario es requerido' });
+                return;
+            }
+
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true, email: true, mfaEnabled: true }
+            });
+
+            if (!user) {
+                res.status(404).json({ error: 'Usuario no encontrado' });
+                return;
+            }
+
+            // Actualizar usuario removiendo el secreto y desactivando MFA
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    mfaEnabled: false,
+                    mfaSecret: null
+                }
+            });
+
+            logger.info(`[AdminController.resetUserMfa] MFA reiniciado exitosamente para el usuario: ${user.email} (ID: ${user.id})`);
+
+            res.status(200).json({
+                success: true,
+                message: `Factor de doble autenticación (MFA) reiniciado exitosamente para ${user.email}`
+            });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error desconocido';
+            logger.error(`[AdminController] Error al reiniciar MFA: ${message}`);
+            res.status(500).json({ error: 'Error interno al reiniciar el factor de doble autenticación' });
+        }
+    }
 }

@@ -1,8 +1,8 @@
-# 📘 Documentación Técnica: NexusAuth (v1.2.1)
+# 📘 Documentación Técnica: NexusAuth (v1.3.0)
 **Fecha:** 2026-09-15
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
-* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript). En desarrollo utiliza `nodemon` con bandera `--transpile-only` y debounce de 500ms para evitar deadlocks de IPC y bloqueos de archivos en Windows.
+* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript). En desarrollo utiliza `nodemon` con bandera `--transpile-only`, debounce de 1000ms e ignorando `logs/*` y `tests/*` para evitar bucles de reinicio causados por escrituras de Winston en Windows.
 * **Almacenamiento y Migraciones:** PostgreSQL administrado por Prisma ORM.
 * **Componentes Externos (OAuth):** `passport-google-oauth20`, `passport-facebook` y `passport-github2` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local. El proveedor GitHub incluye una lógica secundaria de obtención de correos mediante la API de GitHub para perfiles privados.
 * **MFA (Zero-Cost TOTP):** Utiliza `otplib` para generar *Time-Based One-Time Passwords* apegados a algoritmos y protocolos IETF HOTP (RFC 4226/6238). Los Secretos MFA (`mfa_secret`) jamás se almacenan localmente en texto claro, sino encriptados (AES-256-GCM) usando Node `crypto` y un Vector de Inicialización dinámico.
@@ -10,6 +10,7 @@
 * **Consola de Administración Multicliente y UX Responsiva:** 
   * Interfaz en React 18 (Vite + Tailwind) estructurada bajo `AdminLayout` con **menú lateral colapsable** (`260px` a `72px`) persistente en `localStorage`, optimizando el espacio horizontal en monitores pequeños o con escalado DPI.
   * **Mantenimiento de Clientes (`ClientsPage`):** Arquitectura basada en tarjetas fluidas con glassmorphism y CSS Grid dinámico (`repeat(auto-fit, minmax(280px, 1fr))`), eliminando dependencias de tablas rígidas y eliminando por completo el scroll horizontal forzado.
+  * **Directorio y Gestión de Usuarios (`UsersPage.tsx`):** Vista de auditoría multicliente ubicada debajo de Clientes en el menú lateral. Permite filtrar por sistema cliente, buscar por correo en tiempo real con debounce, limitar la vista (50, 100, 200), consultar fechas de registro y último login, e inspeccionar el estado de MFA. Incluye la capacidad de **reinicio remoto de MFA** con confirmación modal para recuperación de cuentas.
   * **Visor Geográfico de Auditoría (`MapModal.tsx`):** Componente modular e interactivo conectado a Leaflet y OpenStreetMap montado en `LogsPage.tsx`. Permite la inspección en tiempo real de la ubicación física calculada por geolocalización IP en cada evento de login, mostrando marcadores dinámicos, popups contextuales con detalles de la sesión y cierre mediante teclado (`Escape`) o interacción fuera de la ventana modal.
   * **Accesibilidad y Autoguardado de Contraseñas:** Compatibilidad con gestores de contraseñas de navegadores (Chrome, Edge, Firefox) en componentes interactivos (`Button.tsx`) mediante `aria-disabled` y `pointer-events-none`.
 
@@ -24,10 +25,10 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant Email as Resend API
     
-    SuperAdmin->>Frontend: Accede al Menú Administrativo
-    Frontend->>AuthAPI: GET /clients /admin/stats /admin/logs (Bearer JWT)
-    AuthAPI->>DB: Consultas y auditoría de clientes
-    AuthAPI-->>Frontend: Métricas consolidadas y bitácora
+    SuperAdmin->>Frontend: Accede al Menú Administrativo (Clientes / Usuarios / Stats / Logs)
+    Frontend->>AuthAPI: GET /clients /admin/users /admin/stats /admin/logs (Bearer JWT)
+    AuthAPI->>DB: Consultas y auditoría de clientes y usuarios
+    AuthAPI-->>Frontend: Métricas consolidadas, bitácora y usuarios
     Frontend->>OAuth: Redirección OAuth (Usuario aprueba)
     OAuth->>AuthAPI: Callback con Token/Perfil
     AuthAPI->>Email: Envío Correos de Recuperación
@@ -55,6 +56,27 @@ sequenceDiagram
     Frontend-->>User: Acceso Permitido, redirección al Dashboard
 ```
 
+## 🔄 Flujo de Reseteo Remoto de MFA (Recuperación Administrativa de Cuentas)
+
+```mermaid
+sequenceDiagram
+    participant SuperAdmin as Super Administrador
+    participant Frontend as Admin UI (UsersPage)
+    participant AuthAPI as API NexusAuth (Express)
+    participant DB as PostgreSQL
+    participant Logger as Winston Logger
+    
+    SuperAdmin->>Frontend: Clic en "Reiniciar MFA" en usuario afectado
+    Frontend-->>SuperAdmin: Modal de confirmación con advertencia de seguridad
+    SuperAdmin->>Frontend: Confirma la acción
+    Frontend->>AuthAPI: POST /admin/users/:id/reset-mfa (Bearer SuperAdmin JWT)
+    AuthAPI->>AuthAPI: Valida requireSuperAdmin
+    AuthAPI->>DB: UPDATE User SET mfaEnabled=false, mfaSecret=null WHERE id=:id
+    AuthAPI->>Logger: logger.info([ADMIN] MFA reseteado para usuario ...)
+    AuthAPI-->>Frontend: 200 OK { message: "MFA reseteado exitosamente" }
+    Frontend-->>SuperAdmin: Mensaje de éxito y badge actualizado a Inactivo
+```
+
 ## 🌐 Endpoints Principales Disponibles
 
 ### 🔑 Authentication (Local + MFA Lifecycle)
@@ -72,6 +94,14 @@ sequenceDiagram
 * **`GET /clients`**: Lista todos los sistemas clientes registrados con sus respectivos orígenes permitidos.
 * **`POST /clients/:id/regenerate-key`**: Invalida el API Key actual del cliente y genera uno nuevo de forma atómica.
 * **`DELETE /clients/:id`**: Elimina permanentemente un sistema cliente y, en cascada, todos sus usuarios y registros asociados.
+
+### 👥 Users & MFA Reset (Gestión de Usuarios - Requiere SuperAdmin)
+* **`GET /admin/users`**: Directorio de usuarios multicliente. Parámetros opcionales:
+  * `clientId`: ID del sistema cliente o omitir/`all` para consultar todos los clientes.
+  * `email`: Filtro predictivo insensible a mayúsculas sobre el correo electrónico.
+  * `limit`: Límite de registros devueltos (50, 100, 200; por defecto 50).
+  * **Seguridad y Proyección:** Ordenado por `createdAt: 'desc'`. Excluye explícitamente `passwordHash` y `mfaSecret`. Incluye proveedores OAuth vinculados (`oauthProviders`), estado de contraseña establecida (`hasPassword`), fecha de creación, actualización y cálculo de último acceso exitoso (`lastLoginAt`).
+* **`POST /admin/users/:id/reset-mfa`**: Restablece el doble factor de autenticación (`mfaEnabled = false`, `mfaSecret = null`) para el usuario especificado. Permite que usuarios que perdieron su teléfono o aplicación autenticadora puedan volver a iniciar sesión y reconfigurar su 2FA. Genera registro de auditoría en Winston.
 
 ### 📊 Admin Analytics & Logs Multicliente (Requiere SuperAdmin)
 * **`GET /admin/stats`**: Obtiene métricas analíticas. Parámetros opcionales: `clientId` (o 'all'), `range` ('today', '7d', '30d', 'custom'), `from` y `to`. Devuelve total de usuarios, altas en período, cambios de contraseña, tasa de adopción de MFA, distribución de tipo de registro (Email vs Social) y tasa de éxito de inicios de sesión.

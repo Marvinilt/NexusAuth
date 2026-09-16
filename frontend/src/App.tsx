@@ -11,6 +11,7 @@ import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import LoginHistoryPage from './pages/LoginHistoryPage';
 import { AdminLayout } from './components/AdminLayout';
 import ClientsPage from './pages/admin/ClientsPage';
+import UsersPage from './pages/admin/UsersPage';
 import StatisticsPage from './pages/admin/StatisticsPage';
 import LogsPage from './pages/admin/LogsPage';
 import { Shield } from 'lucide-react';
@@ -70,6 +71,7 @@ function Header() {
         {isAuthenticated && user?.isSuperAdmin && (
           <nav style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.85rem' }}>
             <a href="/admin/clients" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Clientes</a>
+            <a href="/admin/users" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Usuarios</a>
             <a href="/admin/statistics" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Estadísticas</a>
             <a href="/admin/logs" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Logs Multicliente</a>
             <a href="/dashboard" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}>Mi Perfil</a>
@@ -122,6 +124,16 @@ function App() {
                   <ProtectedRoute>
                     <AdminLayout>
                       <ClientsPage />
+                    </AdminLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute>
+                    <AdminLayout>
+                      <UsersPage />
                     </AdminLayout>
                   </ProtectedRoute>
                 }
