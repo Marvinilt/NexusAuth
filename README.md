@@ -11,8 +11,9 @@ NexusAuth es un microservicio de Identidad Centralizada "Zero-Cost" construido c
 
 El sistema soporta autenticación multicanal y multifactor, e incluye las siguientes características principales integradas en un solo microservicio con cliente web frontend en React:
 
-* **Panel de Administración Multicliente:** Consola centralizada protegida por rol de Super Administrador con menú lateral interactivo:
-  * **Mantenimiento de Clientes:** Listado, alta de nuevos sistemas cliente, visualización protegida de credenciales, rotación/regeneración de API Keys y eliminación.
+* **Panel de Administración Multicliente:** Consola centralizada protegida por rol de Super Administrador con menú lateral interactivo y adaptable:
+  * **Menú Lateral Colapsable:** Barra de navegación retráctil con botón de flecha (`<` / `>`) que conmuta entre modo completo (260px) y modo compacto de solo iconos (72px) con tooltips, optimizando el espacio horizontal en monitores pequeños con persistencia en `localStorage`.
+  * **Mantenimiento de Clientes (Cards Responsivas):** Listado y gestión fluida de aplicaciones cliente mediante tarjetas con glassmorphism, visualización protegida de credenciales, rotación/regeneración de API Keys, copia al portapapeles y eliminación sin desbordamientos ni scroll horizontal forzado.
   * **Dashboard de Estadísticas:** Analítica en tiempo real filtrada por cliente y rangos de fecha (hoy, 7 días, 30 días, manual), desglose de tipo de registro (Email vs Redes Sociales), cambios de contraseña y tasa de adopción de MFA/2FA.
   * **Logs de Auditoría Multicliente:** Auditoría completa de accesos con selector de cliente, buscador por email de usuario, filtrado por estado y visualización de IP, navegador y geolocalización.
 * **Multi-Cliente (Multi-Tenant):** Soporte total para registrar y aislar independientemente múltiples sistemas clientes a través de `API Keys` y listas blancas dinámicas (CORS Whitelisting) por cliente. Un mismo correo electrónico puede coexistir en múltiples sistemas clientes sin colisión.

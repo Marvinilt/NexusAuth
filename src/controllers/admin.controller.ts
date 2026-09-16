@@ -35,10 +35,16 @@ export class AdminController {
                 startDate = new Date();
                 startDate.setDate(now.getDate() - 30);
             } else if (range === 'custom' && fromParam) {
-                startDate = new Date(fromParam);
+                const parsedStart = new Date(fromParam);
+                if (!isNaN(parsedStart.getTime())) {
+                    startDate = parsedStart;
+                }
                 if (toParam) {
-                    endDate = new Date(toParam);
-                    endDate.setHours(23, 59, 59, 999);
+                    const parsedEnd = new Date(toParam);
+                    if (!isNaN(parsedEnd.getTime())) {
+                        parsedEnd.setHours(23, 59, 59, 999);
+                        endDate = parsedEnd;
+                    }
                 }
             }
 
@@ -117,8 +123,8 @@ export class AdminController {
                     social: usersWithOAuth
                 },
                 dateRange: {
-                    from: startDate ? startDate.toISOString() : null,
-                    to: endDate.toISOString()
+                    from: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : null,
+                    to: !isNaN(endDate.getTime()) ? endDate.toISOString() : now.toISOString()
                 }
             });
         } catch (error: unknown) {

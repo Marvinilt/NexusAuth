@@ -49,6 +49,16 @@ app.use(cors(async (req, callback) => {
 app.use(express.json());
 app.use(passport.initialize());
 
+// HTTP Request logging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        logger.info(`[HTTP] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+});
+
 // Basic healthcheck route
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'OK', message: 'NexusAuth is running' });

@@ -308,9 +308,10 @@ export default function LogsPage() {
                     backdropFilter: 'blur(10px)',
                     borderRadius: '16px',
                     border: '1px solid var(--border)',
-                    overflow: 'hidden'
+                    overflowX: 'auto',
+                    maxWidth: '100%'
                 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{
                                 borderBottom: '1px solid var(--border)',

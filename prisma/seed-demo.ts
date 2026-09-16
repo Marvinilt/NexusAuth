@@ -37,6 +37,31 @@ async function createDemoData() {
         console.log(` Cliente existente: ${clientBeta.name}`);
     }
 
+    // Asegurar usuario Super Administrador en el cliente principal
+    const defaultClient = await prisma.client.findFirst({ where: { name: 'Frontend React App' } }) || clientAlfa;
+    if (defaultClient) {
+        let superAdminUser = await prisma.user.findFirst({
+            where: { email: 'admin@nexusauth.com', clientId: defaultClient.id }
+        });
+        if (!superAdminUser) {
+            await prisma.user.create({
+                data: {
+                    email: 'admin@nexusauth.com',
+                    passwordHash: defaultPasswordHash,
+                    clientId: defaultClient.id,
+                    mfaEnabled: false
+                }
+            });
+            console.log(` SuperAdmin registrado: admin@nexusauth.com (Password: Password123!@#)`);
+        } else {
+            await prisma.user.update({
+                where: { id: superAdminUser.id },
+                data: { passwordHash: defaultPasswordHash }
+            });
+            console.log(` SuperAdmin actualizado: admin@nexusauth.com (Password: Password123!@#)`);
+        }
+    }
+
     // Datos de usuarios para cada cliente
     const clientsData = [
         {

@@ -1,13 +1,16 @@
-# 📘 Documentación Técnica: NexusAuth (v1.2.0)
+# 📘 Documentación Técnica: NexusAuth (v1.2.1)
 **Fecha:** 2026-09-15
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
-* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript).
+* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript). En desarrollo utiliza `nodemon` con bandera `--transpile-only` y debounce de 500ms para evitar deadlocks de IPC y bloqueos de archivos en Windows.
 * **Almacenamiento y Migraciones:** PostgreSQL administrado por Prisma ORM.
 * **Componentes Externos (OAuth):** `passport-google-oauth20`, `passport-facebook` y `passport-github2` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local. El proveedor GitHub incluye una lógica secundaria de obtención de correos mediante la API de GitHub para perfiles privados.
 * **MFA (Zero-Cost TOTP):** Utiliza `otplib` para generar *Time-Based One-Time Passwords* apegados a algoritmos y protocolos IETF HOTP (RFC 4226/6238). Los Secretos MFA (`mfa_secret`) jamás se almacenan localmente en texto claro, sino encriptados (AES-256-GCM) usando Node `crypto` y un Vector de Inicialización dinámico.
 * **Notificaciones Outbound (Email):** Implementado vía servicio de entrega `resend` que expone planes sin costo.
-* **Consola de Administración Multicliente:** Interfaz en React 18 (Vite + Tailwind) estructurada bajo `AdminLayout` con navegación dedicada para mantenimiento de aplicaciones cliente, métricas de actividad y auditoría transversal.
+* **Consola de Administración Multicliente y UX Responsiva:** 
+  * Interfaz en React 18 (Vite + Tailwind) estructurada bajo `AdminLayout` con **menú lateral colapsable** (`260px` a `72px`) persistente en `localStorage`, optimizando el espacio horizontal en monitores pequeños o con escalado DPI.
+  * **Mantenimiento de Clientes (`ClientsPage`):** Arquitectura basada en tarjetas fluidas con glassmorphism y CSS Grid dinámico (`repeat(auto-fit, minmax(280px, 1fr))`), eliminando dependencias de tablas rígidas y eliminando por completo el scroll horizontal forzado.
+  * **Accesibilidad y Autoguardado de Contraseñas:** Compatibilidad con gestores de contraseñas de navegadores (Chrome, Edge, Firefox) en componentes interactivos (`Button.tsx`) mediante `aria-disabled` y `pointer-events-none`.
 
 ## 🧩 Componentes y Comunicación del Sistema
 

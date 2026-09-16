@@ -17,7 +17,8 @@ trigger: always_on
 1. Si ya estas en una rama feature, continua ahí haciendo los cambios en ese branch, no crees ningun otro branch.
 2. Si NO estas en una rama feature, crea en git un nuevo branch del feature correspondiente a partir del branch develop para iniciar el desarrollo de la nueva funcionalidad.
 3. Nunca hagas cambios ni hagas commit sobre el branch develop, tampoco en el branch main, prohibido hacer commit en branch develop o main.
-4. Despues de hacer bastantes cambios pregunta al usuario si desea dar por finalizado el desarrollo.
+4. **NO hacer commit ni push de cada pequeño fix o ajuste intermedio:** Durante la sesión de trabajo y correcciones, mantén los cambios en local sin hacer commit ni push tras cada pequeño cambio, para evitar saturar el historial de git con commits innecesarios.
+5. Despues de hacer bastantes cambios pregunta al usuario si desea dar por finalizado el desarrollo. Solo cuando el usuario confirme que se ha finalizado el desarrollo o la sesión de correcciones, se procede a consolidar el commit y push.
 
 
 ### Al Finalizar el desarrollo de una funcionalidad

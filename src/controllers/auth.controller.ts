@@ -1,8 +1,16 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
+import { AuthService, LoginResult } from '../services/auth.service';
 import { logger } from '../config/logger';
 import { generateToken, TokenPayload } from '../utils/jwt';
 import { prisma } from '../config/prisma';
+import { config } from '../config/env';
+
+interface OAuthUser {
+    id: string;
+    email: string;
+    clientId: string;
+    mfaEnabled?: boolean;
+}
 
 const authService = new AuthService();
 
@@ -71,7 +79,10 @@ export class AuthController {
                 res.status(400).json({ error: 'Identificador de cliente no disponible' });
                 return;
             }
-            const result = await authService.login(email, password, clientId);
+            const result: LoginResult = await authService.login(email, password, clientId);
+
+            const isSuperAdmin = email.toLowerCase() === config.superAdminEmail.toLowerCase();
+            const logClientId = isSuperAdmin ? null : clientId;
 
             if (!result.mfaRequired && result.user) {
                 const ipAddress = req.ip || req.socket.remoteAddress;
@@ -79,9 +90,10 @@ export class AuthController {
                 const lastLoginAt = await authService.logUserLogin(result.user.id, {
                     status: 'SUCCESS',
                     ipAddress,
-                    userAgent
+                    userAgent,
+                    clientId: logClientId,
                 });
-                (result.user as any).lastLoginAt = lastLoginAt;
+                result.user.lastLoginAt = lastLoginAt;
             }
 
             res.status(200).json(result);
@@ -94,10 +106,13 @@ export class AuthController {
                 const clientId = req.client?.id;
                 const tempUser = clientId ? await prisma.user.findUnique({ where: { email_clientId: { email: req.body.email, clientId } } }) : null;
                 if (tempUser) {
+                    const isSuperAdmin = tempUser.email.toLowerCase() === config.superAdminEmail.toLowerCase();
+                    const logClientId = isSuperAdmin ? null : clientId;
                     await authService.logUserLogin(tempUser.id, {
                         status: 'FAILED',
                         ipAddress: req.ip || req.socket.remoteAddress,
-                        userAgent: (req.headers['user-agent'] as string) || 'Unknown'
+                        userAgent: (req.headers['user-agent'] as string) || 'Unknown',
+                        clientId: logClientId,
                     });
                 }
             } catch (logErr) {
@@ -119,37 +134,47 @@ export class AuthController {
      * @param res - Objeto de respuesta Express para redirección.
      */
     async oauthCallback(req: Request, res: Response): Promise<void> {
-        if (!req.user) {
-            logger.error(`[AuthController.oauthCallback] Authentication failed to return an OAuth user object`);
-            res.status(401).json({ error: 'Autenticación fallida' });
-            return;
+        try {
+            if (!req.user) {
+                logger.error(`[AuthController.oauthCallback] Authentication failed to return an OAuth user object`);
+                res.status(401).json({ error: 'Autenticación fallida' });
+                return;
+            }
+
+            const authUser = req.user as OAuthUser;
+            logger.info(`[AuthController.oauthCallback] Handling successful OAuth callback for user: ${authUser.email}`);
+
+            const isSuperAdmin = authUser.email.toLowerCase() === config.superAdminEmail.toLowerCase();
+            const logClientId = isSuperAdmin ? null : (authUser.clientId || null);
+
+            if (authUser.mfaEnabled) {
+                const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId, mfaPending: true, isSuperAdmin };
+                const mfaToken = generateToken(payload, '15m');
+                // Redirect to frontend's MFA verification page with the temporary token
+                res.redirect(`http://localhost:5173/mfa-verify?mfaToken=${mfaToken}`);
+                return;
+            }
+
+            const ipAddress = req.ip || req.socket.remoteAddress;
+            const userAgent = (req.headers['user-agent'] as string) || 'Unknown';
+            const lastLoginAt = await authService.logUserLogin(authUser.id, {
+                status: 'SUCCESS',
+                ipAddress,
+                userAgent,
+                clientId: logClientId,
+            });
+
+            const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId, isSuperAdmin };
+            const token = generateToken(payload);
+            const userData = JSON.stringify({ id: authUser.id, email: authUser.email, lastLoginAt, isSuperAdmin });
+
+            // Redirect to frontend's callback capture page with token and user data
+            res.redirect(`http://localhost:5173/oauth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Error desconocido';
+            logger.error(`[AuthController.oauthCallback] Error during OAuth callback: ${message}`);
+            res.redirect(`http://localhost:5173/login?error=${encodeURIComponent(message)}`);
         }
-
-        const authUser = req.user as any;
-        logger.info(`[AuthController.oauthCallback] Handling successful OAuth callback for user: ${authUser.email}`);
-
-        if (authUser.mfaEnabled) {
-            const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId, mfaPending: true };
-            const mfaToken = generateToken(payload, '15m');
-            // Redirect to frontend's MFA verification page with the temporary token
-            res.redirect(`http://localhost:5173/mfa-verify?mfaToken=${mfaToken}`);
-            return;
-        }
-
-        const ipAddress = req.ip || req.socket.remoteAddress;
-        const userAgent = (req.headers['user-agent'] as string) || 'Unknown';
-        const lastLoginAt = await authService.logUserLogin(authUser.id, {
-            status: 'SUCCESS',
-            ipAddress,
-            userAgent
-        });
-
-        const payload: TokenPayload = { userId: authUser.id, email: authUser.email, clientId: authUser.clientId };
-        const token = generateToken(payload);
-        const userData = JSON.stringify({ id: authUser.id, email: authUser.email, lastLoginAt });
-
-        // Redirect to frontend's callback capture page with token and user data
-        res.redirect(`http://localhost:5173/oauth/callback?token=${token}&user=${encodeURIComponent(userData)}`);
     }
 
     /**
@@ -159,7 +184,11 @@ export class AuthController {
      */
     async getHistory(req: Request, res: Response): Promise<void> {
         try {
-            const user = (req as any).user;
+            const user = req.user as TokenPayload | undefined;
+            if (!user?.userId) {
+                res.status(401).json({ error: 'No autorizado' });
+                return;
+            }
             const history = await authService.getLoginHistory(user.userId);
             res.json(history);
         } catch (error: unknown) {

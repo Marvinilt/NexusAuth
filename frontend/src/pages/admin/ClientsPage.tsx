@@ -145,7 +145,9 @@ export default function ClientsPage() {
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem',
                 marginBottom: '2rem'
             }}>
                 <div>
@@ -232,71 +234,188 @@ export default function ClientsPage() {
                 </div>
             ) : (
                 <div style={{
-                    background: 'rgba(30, 41, 59, 0.6)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid var(--border)',
-                    overflow: 'hidden'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    width: '100%'
                 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                        <thead>
-                            <tr style={{
-                                borderBottom: '1px solid var(--border)',
-                                background: 'rgba(15, 23, 42, 0.6)',
-                                color: 'var(--text-secondary)',
-                                fontSize: '0.75rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em'
-                            }}>
-                                <th style={{ padding: '1rem 1.5rem' }}>Nombre del Cliente</th>
-                                <th style={{ padding: '1rem 1.5rem' }}>API Key (Credencial)</th>
-                                <th style={{ padding: '1rem 1.5rem' }}>Orígenes Permitidos (CORS)</th>
-                                <th style={{ padding: '1rem 1.5rem' }}>Fecha de Registro</th>
-                                <th style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {clients.map((client) => {
-                                const isKeyVisible = !!visibleKeys[client.id];
-                                const isCopied = copiedId === client.id;
-                                const isProcessing = processingId === client.id;
+                    {clients.map((client) => {
+                        const isKeyVisible = !!visibleKeys[client.id];
+                        const isCopied = copiedId === client.id;
+                        const isProcessing = processingId === client.id;
 
-                                return (
-                                    <tr 
-                                        key={client.id}
-                                        style={{
-                                            borderBottom: '1px solid var(--border)',
-                                            fontSize: '0.9rem',
-                                            transition: 'background 0.15s ease'
-                                        }}
-                                    >
-                                        {/* Client Name & ID */}
-                                        <td style={{ padding: '1.2rem 1.5rem' }}>
-                                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                        return (
+                            <div 
+                                key={client.id}
+                                style={{
+                                    background: 'rgba(30, 41, 59, 0.6)',
+                                    backdropFilter: 'blur(10px)',
+                                    borderRadius: '16px',
+                                    border: '1px solid var(--border)',
+                                    padding: '1.25rem 1.5rem',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '1rem',
+                                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                                }}
+                            >
+                                {/* Top Row: Info & Actions */}
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    gap: '0.75rem'
+                                }}>
+                                    {/* Client Identity */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '200px' }}>
+                                        <div style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '10px',
+                                            background: 'rgba(99, 102, 241, 0.12)',
+                                            border: '1px solid rgba(99, 102, 241, 0.25)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'var(--primary)',
+                                            flexShrink: 0
+                                        }}>
+                                            <Building2 size={20} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
                                                 {client.name}
                                             </div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                                                ID: {client.id}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                                                <span style={{
+                                                    fontSize: '0.72rem',
+                                                    color: 'var(--text-secondary)',
+                                                    fontFamily: 'monospace',
+                                                    background: 'rgba(15, 23, 42, 0.7)',
+                                                    padding: '0.15rem 0.45rem',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                                                }}>
+                                                    ID: {client.id}
+                                                </span>
+                                                <span style={{
+                                                    fontSize: '0.75rem',
+                                                    color: 'var(--text-secondary)',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.3rem'
+                                                }}>
+                                                    <Calendar size={12} />
+                                                    {new Date(client.createdAt).toLocaleDateString()}
+                                                </span>
                                             </div>
-                                        </td>
+                                        </div>
+                                    </div>
 
-                                        {/* API Key */}
-                                        <td style={{ padding: '1.2rem 1.5rem' }}>
-                                            <div style={{
+                                    {/* Action Buttons */}
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '0.5rem',
+                                        alignItems: 'center',
+                                        flexWrap: 'wrap'
+                                    }}>
+                                        <button
+                                            onClick={() => handleRegenerateKey(client)}
+                                            disabled={isProcessing}
+                                            title="Regenerar credenciales (nuevo API Key)"
+                                            style={{
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
-                                                gap: '0.5rem',
-                                                background: 'rgba(15, 23, 42, 0.8)',
-                                                border: '1px solid var(--border)',
-                                                padding: '0.35rem 0.6rem',
+                                                gap: '0.4rem',
+                                                padding: '0.5rem 0.85rem',
+                                                background: 'rgba(234, 179, 8, 0.1)',
+                                                border: '1px solid rgba(234, 179, 8, 0.3)',
+                                                color: '#facc15',
                                                 borderRadius: '8px',
-                                                fontFamily: 'monospace',
-                                                fontSize: '0.85rem'
-                                            }}>
-                                                <Key size={14} color="var(--primary)" />
-                                                <span style={{ color: isKeyVisible ? '#38bdf8' : 'var(--text-secondary)' }}>
+                                                fontSize: '0.8rem',
+                                                fontWeight: 600,
+                                                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            <RefreshCw size={13} className={isProcessing ? "animate-spin" : ""} />
+                                            Regenerar Key
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDeleteClient(client)}
+                                            disabled={isProcessing}
+                                            title="Eliminar cliente"
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                padding: '0.5rem 0.7rem',
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                color: '#f87171',
+                                                borderRadius: '8px',
+                                                fontSize: '0.8rem',
+                                                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Grid: Credentials & CORS */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                    gap: '0.85rem',
+                                    background: 'rgba(15, 23, 42, 0.5)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '12px',
+                                    padding: '0.85rem 1rem'
+                                }}>
+                                    {/* API Key Box */}
+                                    <div>
+                                        <div style={{
+                                            fontSize: '0.7rem',
+                                            textTransform: 'uppercase',
+                                            color: 'var(--text-secondary)',
+                                            fontWeight: 600,
+                                            letterSpacing: '0.05em',
+                                            marginBottom: '0.35rem'
+                                        }}>
+                                            API Key (Credencial de Acceso)
+                                        </div>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '0.5rem',
+                                            background: 'rgba(15, 23, 42, 0.85)',
+                                            border: '1px solid var(--border)',
+                                            padding: '0.4rem 0.65rem',
+                                            borderRadius: '8px',
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.82rem'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', overflow: 'hidden', minWidth: 0 }}>
+                                                <Key size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
+                                                <span 
+                                                    style={{
+                                                        color: isKeyVisible ? '#38bdf8' : 'var(--text-secondary)',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                    title={isKeyVisible ? client.apiKey : undefined}
+                                                >
                                                     {isKeyVisible ? client.apiKey : '••••••••••••••••••••••••••••••••'}
                                                 </span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
                                                 <button
                                                     onClick={() => toggleKeyVisibility(client.id)}
                                                     title={isKeyVisible ? "Ocultar API Key" : "Revelar API Key"}
@@ -305,9 +424,10 @@ export default function ClientsPage() {
                                                         border: 'none',
                                                         color: 'var(--text-secondary)',
                                                         cursor: 'pointer',
-                                                        padding: '2px',
+                                                        padding: '4px',
                                                         display: 'flex',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        borderRadius: '4px'
                                                     }}
                                                 >
                                                     {isKeyVisible ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -316,108 +436,77 @@ export default function ClientsPage() {
                                                     onClick={() => copyToClipboard(client.apiKey, client.id)}
                                                     title="Copiar API Key"
                                                     style={{
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        color: isCopied ? 'var(--success)' : 'var(--text-secondary)',
+                                                        background: isCopied ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                                        border: `1px solid ${isCopied ? 'var(--success)' : 'var(--border)'}`,
+                                                        color: isCopied ? 'var(--success)' : 'var(--text-primary)',
                                                         cursor: 'pointer',
-                                                        padding: '2px',
+                                                        padding: '0.25rem 0.55rem',
                                                         display: 'flex',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        gap: '0.3rem',
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.72rem',
+                                                        fontWeight: 600,
+                                                        transition: 'all 0.15s ease'
                                                     }}
                                                 >
-                                                    {isCopied ? <Check size={14} /> : <Copy size={14} />}
+                                                    {isCopied ? <Check size={13} /> : <Copy size={13} />}
+                                                    <span>{isCopied ? 'Copiado' : 'Copiar'}</span>
                                                 </button>
                                             </div>
-                                        </td>
+                                        </div>
+                                    </div>
 
-                                        {/* Allowed Origins */}
-                                        <td style={{ padding: '1.2rem 1.5rem' }}>
+                                    {/* Allowed Origins (CORS) */}
+                                    <div>
+                                        <div style={{
+                                            fontSize: '0.7rem',
+                                            textTransform: 'uppercase',
+                                            color: 'var(--text-secondary)',
+                                            fontWeight: 600,
+                                            letterSpacing: '0.05em',
+                                            marginBottom: '0.35rem'
+                                        }}>
+                                            Orígenes Permitidos (CORS)
+                                        </div>
+                                        <div style={{
+                                            minHeight: '34px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
+                                            gap: '0.35rem'
+                                        }}>
                                             {client.allowedOrigins && client.allowedOrigins.length > 0 ? (
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                                                    {client.allowedOrigins.map((origin, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            style={{
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.3rem',
-                                                                background: 'rgba(99, 102, 241, 0.1)',
-                                                                color: '#a5b4fc',
-                                                                padding: '0.2rem 0.5rem',
-                                                                borderRadius: '6px',
-                                                                fontSize: '0.75rem',
-                                                                border: '1px solid rgba(99, 102, 241, 0.2)'
-                                                            }}
-                                                        >
-                                                            <Globe size={11} />
-                                                            {origin}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                                client.allowedOrigins.map((origin, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.3rem',
+                                                            background: 'rgba(99, 102, 241, 0.1)',
+                                                            color: '#a5b4fc',
+                                                            padding: '0.2rem 0.5rem',
+                                                            borderRadius: '6px',
+                                                            fontSize: '0.75rem',
+                                                            border: '1px solid rgba(99, 102, 241, 0.2)'
+                                                        }}
+                                                    >
+                                                        <Globe size={11} />
+                                                        {origin}
+                                                    </span>
+                                                ))
                                             ) : (
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                                    Sin orígenes restringidos
+                                                    Sin orígenes restringidos (acceso libre)
                                                 </span>
                                             )}
-                                        </td>
-
-                                        {/* Registration Date */}
-                                        <td style={{ padding: '1.2rem 1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                <Calendar size={13} />
-                                                {new Date(client.createdAt).toLocaleDateString()}
-                                            </div>
-                                        </td>
-
-                                        {/* Action Buttons */}
-                                        <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
-                                            <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                <button
-                                                    onClick={() => handleRegenerateKey(client)}
-                                                    disabled={isProcessing}
-                                                    title="Regenerar credenciales (nuevo API Key)"
-                                                    style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.35rem',
-                                                        padding: '0.4rem 0.75rem',
-                                                        background: 'rgba(234, 179, 8, 0.1)',
-                                                        border: '1px solid rgba(234, 179, 8, 0.3)',
-                                                        color: '#facc15',
-                                                        borderRadius: '8px',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 600,
-                                                        cursor: isProcessing ? 'not-allowed' : 'pointer'
-                                                    }}
-                                                >
-                                                    <RefreshCw size={13} className={isProcessing ? "animate-spin" : ""} />
-                                                    Regenerar Key
-                                                </button>
-
-                                                <button
-                                                    onClick={() => handleDeleteClient(client)}
-                                                    disabled={isProcessing}
-                                                    title="Eliminar cliente"
-                                                    style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        padding: '0.4rem 0.6rem',
-                                                        background: 'rgba(239, 68, 68, 0.1)',
-                                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                        color: '#f87171',
-                                                        borderRadius: '8px',
-                                                        cursor: isProcessing ? 'not-allowed' : 'pointer'
-                                                    }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
