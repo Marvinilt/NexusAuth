@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2026-09-15
 
 ### Added
+- **Visualizador Interactivo de Geolocalización en Logs de Auditoría (`MapModal`):**
+  - Componente modal interactivo (`MapModal.tsx`) basado en Leaflet y OpenStreetMap para inspeccionar geográficamente las coordenadas de cualquier registro de acceso desde la consola de auditoría (`LogsPage.tsx`).
+  - Botón semántico y accesible en la columna de ubicación con hover interactivo, tooltip e indicador de mapa que activa el modal centrado con backdrop desenfocado (`backdropFilter: blur(6px)`).
+  - Marcador geográfico con popup detallado conteniendo estado del acceso, correo del usuario, sistema cliente, dirección IP y fecha/hora formateada.
+  - Cierre accesible mediante teclado (tecla `Escape`), clic en backdrop o botón de cierre.
+  - Enriquecimiento de `prisma/seed-demo.ts` con coordenadas de latitud y longitud reales para ciudades de prueba (Bogotá, Ciudad de México, Madrid, Lima, Buenos Aires).
 - **Menú Lateral Colapsable en Consola Admin:**
   - Botón de alternancia rápida (`ChevronLeft` / `ChevronRight`) en la parte superior del menú lateral.
   - Modo colapsado compacto (72px) que oculta los rótulos y mantiene centrados los iconos de navegación con tooltips nativos.

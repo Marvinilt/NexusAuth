@@ -10,6 +10,7 @@
 * **Consola de Administración Multicliente y UX Responsiva:** 
   * Interfaz en React 18 (Vite + Tailwind) estructurada bajo `AdminLayout` con **menú lateral colapsable** (`260px` a `72px`) persistente en `localStorage`, optimizando el espacio horizontal en monitores pequeños o con escalado DPI.
   * **Mantenimiento de Clientes (`ClientsPage`):** Arquitectura basada en tarjetas fluidas con glassmorphism y CSS Grid dinámico (`repeat(auto-fit, minmax(280px, 1fr))`), eliminando dependencias de tablas rígidas y eliminando por completo el scroll horizontal forzado.
+  * **Visor Geográfico de Auditoría (`MapModal.tsx`):** Componente modular e interactivo conectado a Leaflet y OpenStreetMap montado en `LogsPage.tsx`. Permite la inspección en tiempo real de la ubicación física calculada por geolocalización IP en cada evento de login, mostrando marcadores dinámicos, popups contextuales con detalles de la sesión y cierre mediante teclado (`Escape`) o interacción fuera de la ventana modal.
   * **Accesibilidad y Autoguardado de Contraseñas:** Compatibilidad con gestores de contraseñas de navegadores (Chrome, Edge, Firefox) en componentes interactivos (`Button.tsx`) mediante `aria-disabled` y `pointer-events-none`.
 
 ## 🧩 Componentes y Comunicación del Sistema

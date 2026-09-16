@@ -95,7 +95,13 @@ async function createDemoData() {
     ];
 
     const ips = ['190.158.45.12', '181.129.78.24', '201.244.112.5', '190.235.10.88', '186.84.90.15'];
-    const locations = ['Bogotá, Colombia', 'Ciudad de México, México', 'Madrid, España', 'Lima, Perú', 'Buenos Aires, Argentina'];
+    const locations = [
+        { name: 'Bogotá, Colombia', lat: 4.7110, lon: -74.0721 },
+        { name: 'Ciudad de México, México', lat: 19.4326, lon: -99.1332 },
+        { name: 'Madrid, España', lat: 40.4168, lon: -3.7038 },
+        { name: 'Lima, Perú', lat: -12.0464, lon: -77.0428 },
+        { name: 'Buenos Aires, Argentina', lat: -34.6037, lon: -58.3816 }
+    ];
 
     let totalUsersCreated = 0;
     let totalLogsCreated = 0;
@@ -167,6 +173,7 @@ async function createDemoData() {
                 const isSuccess = Math.random() > 0.2; // 80% de éxito, 20% fallido
                 const randomIdx = Math.floor(Math.random() * ips.length);
 
+                const loc = locations[randomIdx];
                 await prisma.loginLog.create({
                     data: {
                         status: isSuccess ? LoginStatus.SUCCESS : LoginStatus.FAILED,
@@ -174,7 +181,9 @@ async function createDemoData() {
                         clientId: group.client.id,
                         ipAddress: ips[randomIdx],
                         userAgent: browsers[randomIdx],
-                        location: locations[randomIdx],
+                        location: loc.name,
+                        latitude: loc.lat,
+                        longitude: loc.lon,
                         createdAt: logDate
                     }
                 });

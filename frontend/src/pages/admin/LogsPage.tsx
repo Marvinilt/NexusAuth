@@ -10,8 +10,10 @@ import {
     Laptop, 
     Clock, 
     RefreshCcw,
-    Filter
+    Filter,
+    Map
 } from 'lucide-react';
+import { MapModal } from '../../components/MapModal';
 
 interface Client {
     id: string;
@@ -47,6 +49,7 @@ export default function LogsPage() {
     const [logs, setLogs] = useState<LoginLog[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedLogForMap, setSelectedLogForMap] = useState<LoginLog | null>(null);
 
     // Fetch clients for dropdown
     useEffect(() => {
@@ -229,7 +232,7 @@ export default function LogsPage() {
                     <Filter size={15} color="var(--text-secondary)" />
                     <select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as any)}
+                        onChange={(e) => setStatusFilter(e.target.value as 'all' | 'SUCCESS' | 'FAILED')}
                         style={{
                             background: 'var(--bg-dark)',
                             color: '#fff',
@@ -413,11 +416,56 @@ export default function LogsPage() {
                                         </td>
 
                                         {/* Location */}
-                                        <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                                <MapPin size={13} color="var(--primary)" />
-                                                <span>{log.location || 'Localhost (Dev)'}</span>
-                                            </div>
+                                        <td style={{ padding: '1rem 1.5rem', fontSize: '0.85rem' }}>
+                                            {log.latitude && log.longitude ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedLogForMap(log)}
+                                                    title={`Ver mapa en ${log.location || 'coordenadas registradas'}`}
+                                                    aria-label={`Ver mapa interactivo de ${log.location || 'la ubicación'}`}
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.45rem',
+                                                        background: 'rgba(99, 102, 241, 0.1)',
+                                                        border: '1px solid rgba(99, 102, 241, 0.28)',
+                                                        color: '#c7d2fe',
+                                                        padding: '0.35rem 0.65rem',
+                                                        borderRadius: '8px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.825rem',
+                                                        fontWeight: 500,
+                                                        textAlign: 'left',
+                                                        transition: 'all 0.18s ease'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = 'rgba(99, 102, 241, 0.22)';
+                                                        e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.55)';
+                                                        e.currentTarget.style.color = '#ffffff';
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+                                                        e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.28)';
+                                                        e.currentTarget.style.color = '#c7d2fe';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                    }}
+                                                >
+                                                    <MapPin size={13} color="var(--primary)" style={{ flexShrink: 0 }} />
+                                                    <span style={{ textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                                                        {log.location || 'Ver mapa'}
+                                                    </span>
+                                                    <Map size={12} style={{ opacity: 0.75, marginLeft: '0.15rem' }} />
+                                                </button>
+                                            ) : (
+                                                <div 
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-secondary)' }}
+                                                    title="Sin coordenadas GPS para visualizar en el mapa"
+                                                >
+                                                    <MapPin size={13} style={{ opacity: 0.4 }} />
+                                                    <span>{log.location || 'Localhost (Dev)'}</span>
+                                                </div>
+                                            )}
                                         </td>
 
                                         {/* Timestamp */}
@@ -434,6 +482,23 @@ export default function LogsPage() {
                     </table>
                 </div>
             )}
+
+            {/* Modal de Ubicación en Mapa */}
+            <MapModal
+                data={selectedLogForMap && selectedLogForMap.latitude && selectedLogForMap.longitude ? {
+                    id: selectedLogForMap.id,
+                    location: selectedLogForMap.location,
+                    latitude: selectedLogForMap.latitude,
+                    longitude: selectedLogForMap.longitude,
+                    ipAddress: selectedLogForMap.ipAddress,
+                    userAgent: selectedLogForMap.userAgent,
+                    status: selectedLogForMap.status,
+                    createdAt: selectedLogForMap.createdAt,
+                    userEmail: selectedLogForMap.user?.email,
+                    clientName: selectedLogForMap.client?.name ?? 'NexusAuth Directo'
+                } : null}
+                onClose={() => setSelectedLogForMap(null)}
+            />
         </div>
     );
 }
