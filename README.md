@@ -1,6 +1,6 @@
 # 🛡️ NexusAuth
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)
@@ -11,8 +11,16 @@ NexusAuth es un microservicio de Identidad Centralizada "Zero-Cost" construido c
 
 El sistema soporta autenticación multicanal y multifactor, e incluye las siguientes características principales integradas en un solo microservicio con cliente web frontend en React:
 
+* **Panel de Administración Multicliente:** Consola centralizada protegida por rol de Super Administrador con menú lateral interactivo y adaptable:
+  * **Menú Lateral Colapsable:** Barra de navegación retráctil con botón de flecha (`<` / `>`) que conmuta entre modo completo (260px) y modo compacto de solo iconos (72px) con tooltips, optimizando el espacio horizontal en monitores pequeños con persistencia en `localStorage`.
+  * **Mantenimiento de Clientes (Cards Responsivas):** Listado y gestión fluida de aplicaciones cliente mediante tarjetas con glassmorphism, visualización protegida de credenciales, rotación/regeneración de API Keys, copia al portapapeles y eliminación sin desbordamientos ni scroll horizontal forzado.
+  * **Directorio y Gestión de Usuarios (`UsersPage`):** Ubicado directamente debajo de Clientes en el menú lateral. Permite auditar usuarios creados por sistema cliente o consolidados (`Todos los Clientes`), búsqueda por email en tiempo real, selector de límite (50, 100, 200), inspección de tipos de registro (Contraseña vs Social OAuth2), fecha de registro, último login y **botón de reinicio de MFA** con confirmación modal para permitir la recuperación de cuentas si el usuario extravió su dispositivo 2FA.
+  * **Dashboard de Estadísticas:** Analítica en tiempo real filtrada por cliente y rangos de fecha (hoy, 7 días, 30 días, manual), desglose de tipo de registro (Email vs Redes Sociales), cambios de contraseña y tasa de adopción de MFA/2FA.
+  * **Logs de Auditoría Multicliente con Mapas Interactivos:** Auditoría completa de accesos con selector de cliente, buscador por email de usuario, filtrado por estado y visualización geográfica interactiva: al hacer clic en cualquier ubicación se despliega un mapa modal interactivo (Leaflet + OpenStreetMap) con coordenadas, marcador y metadatos de auditoría en tiempo real.
+* **Multi-Cliente (Multi-Tenant):** Soporte total para registrar y aislar independientemente múltiples sistemas clientes a través de `API Keys` y listas blancas dinámicas (CORS Whitelisting) por cliente. Un mismo correo electrónico puede coexistir en múltiples sistemas clientes sin colisión.
+* **Auditoría de Contraseñas:** Control de fecha de último cambio de contraseña (`passwordChangedAt`) y bitácora detallada de cambios (`PasswordChangeLog`).
 * **Login Local:** Autenticación con Email/Password, encripción con Bcrypt y JWT.
-* **Integración Social (OAuth2):** Soporte para Google y Facebook. 
+* **Integración Social (OAuth2):** Soporte para Google, Facebook y GitHub. 
 * **MFA (Zero-Cost TOTP):** App Authenticator (Google Authenticator / Authy) con códigos de recuperación. Secretos cifrados con AES-256-GCM.
 * **Account Recovery:** Enlaces de reseteo de contraseña enviados por correo vía Resend. Expiración de 15 minutos en los tokens.
 * **Monitoreo de Auditoría:** Histórico de accesos de sesión (exitosos y fallidos) incluyendo geolocalización basada en la dirección IP del usuario, con representación visual en mapas integrados (React Leaflet).
@@ -43,6 +51,9 @@ Necesitarás configurar las variables de entorno principales. Copia y modifica `
 # URL de la base de datos PostgreSQL
 DATABASE_URL="postgresql://usuario:password@localhost:5432/nexusauth?schema=public"
 
+# Super Administrador (acceso al panel multicliente)
+SUPERADMIN_EMAIL="admin@nexusauth.com"
+
 # Llave maestra para firmas y cifrados (JWT, Encripción MFA)
 JWT_SECRET="tusecreoaqui_minimo_32_caracteres"
 ENCRYPTION_KEY="llave_de_32_bytes_para_aes_256"
@@ -55,8 +66,15 @@ FRONTEND_URL="http://localhost:5173"
 # Credenciales Sociales (OAuth)
 GOOGLE_CLIENT_ID="...apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="..."
+GOOGLE_CALLBACK_URL="http://localhost:3000/auth/google/callback"
 FACEBOOK_APP_ID="..."
 FACEBOOK_APP_SECRET="..."
+FACEBOOK_CALLBACK_URL="http://localhost:3000/auth/facebook/callback"
+
+# Credenciales GitHub (GitHub OAuth)
+GITHUB_CLIENT_ID="..."
+GITHUB_CLIENT_SECRET="..."
+GITHUB_CALLBACK_URL="http://localhost:3000/auth/github/callback"
 ```
 
 ## 📦 Guía de Instalación
@@ -70,7 +88,11 @@ FACEBOOK_APP_SECRET="..."
 2. Inicializa las tablas de la base de datos a través de Prisma:
    ```bash
    npx prisma generate
-   npx prisma migrate dev
+   npx prisma db push
+   ```
+3. (Opcional) Genera datos ficticios multicliente para pruebas de clientes, estadísticas y logs:
+   ```bash
+   npm run seed:demo
    ```
 
 ## ⚡ Guía de Uso Rápido

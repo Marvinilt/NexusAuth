@@ -31,8 +31,8 @@ export default function OAuthCallbackPage() {
     return (
         <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
             <Loader2 className="animate-spin" size={48} color="var(--primary)" />
-            <h2>Completing secure login...</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Please wait while we redirect you to your dashboard.</p>
+            <h2>Completando inicio de sesión seguro...</h2>
+            <p style={{ color: 'var(--text-secondary)' }}>Por favor espera mientras te redirigimos a tu panel.</p>
         </div>
     );
 }

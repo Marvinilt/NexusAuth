@@ -7,18 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  passwordHash   String?
-  mfaEnabled     Boolean         @default(false)
-  mfaSecret      String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  oauthProviders OAuthProvider[]
-  backupCodes    BackupCode[]
-  loginLogs      LoginLog[]
+model Client {
+  id             String   @id @default(uuid())
+  name           String
+  apiKey         String   @unique @default(uuid())
+  allowedOrigins String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users              User[]
+  loginLogs          LoginLog[]
+  passwordChangeLogs PasswordChangeLog[]
 
+  @@map("clients")
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  email              String
+  passwordHash       String?
+  passwordChangedAt  DateTime?
+  mfaEnabled         Boolean             @default(false)
+  mfaSecret          String?
+  clientId           String
+  client             Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  oauthProviders     OAuthProvider[]
+  backupCodes        BackupCode[]
+  loginLogs          LoginLog[]
+  passwordChangeLogs PasswordChangeLog[]
+
+  @@unique([email, clientId])
   @@map("users")
 }
 
@@ -48,6 +67,7 @@ model BackupCode {
 enum Provider {
   GOOGLE
   FACEBOOK
+  GITHUB
 }
 
 model LoginLog {
@@ -60,9 +80,24 @@ model LoginLog {
   longitude Float?
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
   createdAt DateTime    @default(now())
 
   @@map("login_logs")
+}
+
+model PasswordChangeLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("password_change_logs")
 }
 
 enum LoginStatus {

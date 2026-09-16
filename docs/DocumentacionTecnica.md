@@ -1,29 +1,34 @@
-# 📘 Documentación Técnica: NexusAuth (v1.0.0)
-
-**Fecha:** 2026-03-09
+# 📘 Documentación Técnica: NexusAuth (v1.3.0)
+**Fecha:** 2026-09-15
 
 ## 🏗️ Arquitectura del Microservicio Centralizado (Zero-Cost Identity Provider)
-* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript).
+* **Poder de Cómputo / API:** Construido sobre Node.js y Express (TypeScript). En desarrollo utiliza `nodemon` con bandera `--transpile-only`, debounce de 1000ms e ignorando `logs/*` y `tests/*` para evitar bucles de reinicio causados por escrituras de Winston en Windows.
 * **Almacenamiento y Migraciones:** PostgreSQL administrado por Prisma ORM.
-* **Componentes Externos (OAuth):** `passport-google-oauth20` y `passport-facebook` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local.
+* **Componentes Externos (OAuth):** `passport-google-oauth20`, `passport-facebook` y `passport-github2` conectándose a las IDP respectivas con callback urls estandarizadas en desarrollo local. El proveedor GitHub incluye una lógica secundaria de obtención de correos mediante la API de GitHub para perfiles privados.
 * **MFA (Zero-Cost TOTP):** Utiliza `otplib` para generar *Time-Based One-Time Passwords* apegados a algoritmos y protocolos IETF HOTP (RFC 4226/6238). Los Secretos MFA (`mfa_secret`) jamás se almacenan localmente en texto claro, sino encriptados (AES-256-GCM) usando Node `crypto` y un Vector de Inicialización dinámico.
 * **Notificaciones Outbound (Email):** Implementado vía servicio de entrega `resend` que expone planes sin costo.
+* **Consola de Administración Multicliente y UX Responsiva:** 
+  * Interfaz en React 18 (Vite + Tailwind) estructurada bajo `AdminLayout` con **menú lateral colapsable** (`260px` a `72px`) persistente en `localStorage`, optimizando el espacio horizontal en monitores pequeños o con escalado DPI.
+  * **Mantenimiento de Clientes (`ClientsPage`):** Arquitectura basada en tarjetas fluidas con glassmorphism y CSS Grid dinámico (`repeat(auto-fit, minmax(280px, 1fr))`), eliminando dependencias de tablas rígidas y eliminando por completo el scroll horizontal forzado.
+  * **Directorio y Gestión de Usuarios (`UsersPage.tsx`):** Vista de auditoría multicliente ubicada debajo de Clientes en el menú lateral. Permite filtrar por sistema cliente, buscar por correo en tiempo real con debounce, limitar la vista (50, 100, 200), consultar fechas de registro y último login, e inspeccionar el estado de MFA. Incluye la capacidad de **reinicio remoto de MFA** con confirmación modal para recuperación de cuentas.
+  * **Visor Geográfico de Auditoría (`MapModal.tsx`):** Componente modular e interactivo conectado a Leaflet y OpenStreetMap montado en `LogsPage.tsx`. Permite la inspección en tiempo real de la ubicación física calculada por geolocalización IP en cada evento de login, mostrando marcadores dinámicos, popups contextuales con detalles de la sesión y cierre mediante teclado (`Escape`) o interacción fuera de la ventana modal.
+  * **Accesibilidad y Autoguardado de Contraseñas:** Compatibilidad con gestores de contraseñas de navegadores (Chrome, Edge, Firefox) en componentes interactivos (`Button.tsx`) mediante `aria-disabled` y `pointer-events-none`.
 
 ## 🧩 Componentes y Comunicación del Sistema
 
 ```mermaid
 sequenceDiagram
+    participant SuperAdmin as Super Administrador
     participant Frontend as Cliente React (Vite)
     participant AuthAPI as API NexusAuth (Express)
     participant OAuth as Social Providers
-    participant Geoloc as ip-api.com
     participant DB as PostgreSQL
     participant Email as Resend API
     
-    Frontend->>AuthAPI: Solicitudes REST (JSON)
-    AuthAPI->>DB: Consultas y Mutaciones (Prisma ORM)
-    AuthAPI->>Geoloc: Analizar IP para Auditoría
-    Geoloc-->>AuthAPI: Datos de Latitud/Longitud
+    SuperAdmin->>Frontend: Accede al Menú Administrativo (Clientes / Usuarios / Stats / Logs)
+    Frontend->>AuthAPI: GET /clients /admin/users /admin/stats /admin/logs (Bearer JWT)
+    AuthAPI->>DB: Consultas y auditoría de clientes y usuarios
+    AuthAPI-->>Frontend: Métricas consolidadas, bitácora y usuarios
     Frontend->>OAuth: Redirección OAuth (Usuario aprueba)
     OAuth->>AuthAPI: Callback con Token/Perfil
     AuthAPI->>Email: Envío Correos de Recuperación
@@ -51,24 +56,66 @@ sequenceDiagram
     Frontend-->>User: Acceso Permitido, redirección al Dashboard
 ```
 
+## 🔄 Flujo de Reseteo Remoto de MFA (Recuperación Administrativa de Cuentas)
+
+```mermaid
+sequenceDiagram
+    participant SuperAdmin as Super Administrador
+    participant Frontend as Admin UI (UsersPage)
+    participant AuthAPI as API NexusAuth (Express)
+    participant DB as PostgreSQL
+    participant Logger as Winston Logger
+    
+    SuperAdmin->>Frontend: Clic en "Reiniciar MFA" en usuario afectado
+    Frontend-->>SuperAdmin: Modal de confirmación con advertencia de seguridad
+    SuperAdmin->>Frontend: Confirma la acción
+    Frontend->>AuthAPI: POST /admin/users/:id/reset-mfa (Bearer SuperAdmin JWT)
+    AuthAPI->>AuthAPI: Valida requireSuperAdmin
+    AuthAPI->>DB: UPDATE User SET mfaEnabled=false, mfaSecret=null WHERE id=:id
+    AuthAPI->>Logger: logger.info([ADMIN] MFA reseteado para usuario ...)
+    AuthAPI-->>Frontend: 200 OK { message: "MFA reseteado exitosamente" }
+    Frontend-->>SuperAdmin: Mensaje de éxito y badge actualizado a Inactivo
+```
+
 ## 🌐 Endpoints Principales Disponibles
 
 ### 🔑 Authentication (Local + MFA Lifecycle)
-* **`POST /auth/register`**: Recibe `{ email, password }`. Otorga password hashing y validaciones de complejidad. Si el correo existe arroja error 400.
-* **`POST /auth/login`**: Crea el payload JWT (Session Lifecycle 15 mins). Compara hashes `bcrypt`. Retorna objeto `{ mfaRequired: true, mfaToken: ... }` si el usuario habilitó Two-Factor o un Session-JWT completo.
-* **`POST /mfa/setup`**: Validado mediante Bearer Token. Retorna secret key en crudo + base64 data url enlazando un URI `otpauth://` lista para escanear en apps como Google Authenticator.
+> **Requisito de Multi-Tenancy:** Todos los endpoints de autenticación requieren que se identifique el sistema cliente que origina la petición, ya sea a través del header `x-api-key` o el parámetro de consulta `apiKey`.
+
+* **`POST /auth/register`**: Recibe `{ email, password }` e identifica el cliente. Otorga password hashing y validaciones de complejidad. Si el correo existe para este cliente, arroja error 400.
+* **`POST /auth/login`**: Crea el payload JWT. Compara hashes `bcrypt`. Retorna objeto `{ mfaRequired: true, mfaToken: ... }` si el usuario habilitó Two-Factor o un Session-JWT completo. Si el email coincide con `SUPERADMIN_EMAIL`, incluye `isSuperAdmin: true`.
+* **`POST /mfa/setup`**: Validado mediante Bearer Token. Retorna secret key en crudo + base64 data url enlazando un URI `otpauth://` lista para escanear en apps.
 * **`POST /mfa/verify-setup`**: Habilita oficialmente la capa de seguridad adicional y retorna un array pregenerado de 10 llaves de seguridad Offline (Backup Codes) alocados en PostgreSQL.
-* **`POST /mfa/verify-login`**: Requiere payload "auth pending" en headers JWT Auth. Acepta `{ token: XXXXXX }` el cual es verificado considerando el "±30 second drift rule". Da tokens totales.
-* **`GET /auth/history`**: Requiere Bearer Token. Retorna los últimos 5 intentos de inicio de sesión (Exitosos y Fallidos) incluyendo metadata de red y ubicación.
+* **`POST /mfa/verify-login`**: Requiere payload "auth pending" en headers JWT Auth. Acepta `{ token: XXXXXX }` el cual es verificado. Da tokens totales.
+* **`GET /auth/history`**: Requiere Bearer Token. Retorna los últimos 5 intentos de inicio de sesión (Exitosos y Fallidos) incluyendo metadata de red y ubicación del usuario actual.
+
+### 🏢 Clients (Mantenimiento de Sistemas Cliente - Requiere SuperAdmin)
+* **`POST /clients`**: Crea un nuevo sistema cliente. Recibe `{ name, allowedOrigins }` y devuelve un `apiKey`.
+* **`GET /clients`**: Lista todos los sistemas clientes registrados con sus respectivos orígenes permitidos.
+* **`POST /clients/:id/regenerate-key`**: Invalida el API Key actual del cliente y genera uno nuevo de forma atómica.
+* **`DELETE /clients/:id`**: Elimina permanentemente un sistema cliente y, en cascada, todos sus usuarios y registros asociados.
+
+### 👥 Users & MFA Reset (Gestión de Usuarios - Requiere SuperAdmin)
+* **`GET /admin/users`**: Directorio de usuarios multicliente. Parámetros opcionales:
+  * `clientId`: ID del sistema cliente o omitir/`all` para consultar todos los clientes.
+  * `email`: Filtro predictivo insensible a mayúsculas sobre el correo electrónico.
+  * `limit`: Límite de registros devueltos (50, 100, 200; por defecto 50).
+  * **Seguridad y Proyección:** Ordenado por `createdAt: 'desc'`. Excluye explícitamente `passwordHash` y `mfaSecret`. Incluye proveedores OAuth vinculados (`oauthProviders`), estado de contraseña establecida (`hasPassword`), fecha de creación, actualización y cálculo de último acceso exitoso (`lastLoginAt`).
+* **`POST /admin/users/:id/reset-mfa`**: Restablece el doble factor de autenticación (`mfaEnabled = false`, `mfaSecret = null`) para el usuario especificado. Permite que usuarios que perdieron su teléfono o aplicación autenticadora puedan volver a iniciar sesión y reconfigurar su 2FA. Genera registro de auditoría en Winston.
+
+### 📊 Admin Analytics & Logs Multicliente (Requiere SuperAdmin)
+* **`GET /admin/stats`**: Obtiene métricas analíticas. Parámetros opcionales: `clientId` (o 'all'), `range` ('today', '7d', '30d', 'custom'), `from` y `to`. Devuelve total de usuarios, altas en período, cambios de contraseña, tasa de adopción de MFA, distribución de tipo de registro (Email vs Social) y tasa de éxito de inicios de sesión.
+* **`GET /admin/logs`**: Bitácora de accesos multicliente. Parámetros opcionales: `clientId`, `email` (búsqueda parcial insensible a mayúsculas), `status` ('SUCCESS' o 'FAILED'), y `limit` (por defecto 100).
 
 ### 🌍 Social Providers (OAuth2 Auth Code Flow)
 * **`GET /auth/google`**: Init OAuth window.
 * **`GET /auth/facebook`**: Init OAuth window.
-* **Callbacks asociados:** `/auth/google/callback` y `/auth/facebook/callback` respectivamente. Valida o crea un IDP en esquema Prisma `OAuthProvider`. Termina con `oauthCallback` arrojando un JWT válido.
+* **`GET /auth/github`**: Init OAuth window (Solicita scope `user:email`).
+* **Callbacks asociados:** `/auth/google/callback`, `/auth/facebook/callback` y `/auth/github/callback` respectivamente. Valida o crea un IDP en esquema Prisma `OAuthProvider`. Termina con `oauthCallback` arrojando un JWT válido. En el caso de GitHub, si el email no es público, se realiza una petición interna asíncrona a `api.github.com/user/emails`.
 
 ### 🔄 Recovery
 * **`POST /recovery/forgot-password`**: Se consume con un `{ email }`. Dispara `resend.emails.send()`.
-* **`POST /recovery/reset-password`**: Cambia el secret password de un usuario sin sesión consumiendo el Short-Lived JWT proveido durante la recuperación por email.
+* **`POST /recovery/reset-password`**: Cambia la contraseña del usuario utilizando el token JWT temporal. Actualiza `passwordChangedAt` en `User` y genera una entrada en `PasswordChangeLog` con la IP y User Agent del cliente.
 
 ## 🗄️ Diseño de Base de Datos
 
@@ -76,16 +123,31 @@ Las tablas en el esquema de PostgreSQL administrado con Prisma incluyen las sigu
 
 ```mermaid
 erDiagram
+    clients ||--o{ users : "aloja"
+    clients ||--o{ login_logs : "audita accesos en"
+    clients ||--o{ password_change_logs : "audita cambios en"
     users ||--o{ oauth_providers : "autentica vía"
     users ||--o{ backup_codes : "posee"
     users ||--o{ login_logs : "registra acceso en"
+    users ||--o{ password_change_logs : "registra cambio de clave en"
+
+    clients {
+        String id PK
+        String name
+        String apiKey UK
+        String[] allowedOrigins
+        DateTime createdAt
+        DateTime updatedAt
+    }
 
     users {
         String id PK
-        String email UK
+        String email
         String passwordHash
+        DateTime passwordChangedAt
         Boolean mfaEnabled
         String mfaSecret
+        String clientId FK
         DateTime createdAt
         DateTime updatedAt
     }
@@ -115,13 +177,23 @@ erDiagram
         Float latitude
         Float longitude
         String userId FK
+        String clientId FK
+        DateTime createdAt
+    }
+
+    password_change_logs {
+        String id PK
+        String userId FK
+        String clientId FK
+        String ipAddress
+        String userAgent
         DateTime createdAt
     }
 ```
 
 
 1. **`User` (Usuarios):** Almacena el identificador universal, correo (único), *hash* del password (si aplica configuración local), secretos para MFA encriptados y banderas de configuración como `mfaEnabled` o cuentas verificadas.
-2. **`OAuthProvider` (Integraciones Sociales):**  Provee Relación de 1 a muchos (1 usuario a muchas plataformas). Se asocia al `User` a través del `userId`, almacenando de dónde provino la cuenta externa (ej. GOOGLE, FACEBOOK) y el ID externo para login social continuo sin colisiones.
+2. **`OAuthProvider` (Integraciones Sociales):**  Provee Relación de 1 a muchos (1 usuario a muchas plataformas). Se asocia al `User` a través del `userId`, almacenando de dónde provino la cuenta externa (ej. GOOGLE, FACEBOOK, GITHUB) y el ID externo para login social continuo sin colisiones.
 3. **`BackupCode` (Códigos de Recuperación MFA):** Una lista ligada al `User`. Códigos generados en texto plano durante la configuración del MFA para recuperar cuentas en caso de pérdida de un smartphone. Son *consumibles*, una vez utilizados se borran atómicamente del registro base.
 4. **`LoginLog` (Bitácora de Eventos):** Registra cada intento de autenticación individual, asistiéndose mediante validaciones tanto correctas como incorrectas (`SUCCESS` / `FAILED`). Contiene fecha exacta, dirección IP y metadatos complementarios como Agente de Usuario y geolocalización extraída (`latitude`, `longitude`, `location`).
 
@@ -132,6 +204,13 @@ erDiagram
   * **Geolocalización**: Mediante la IP del cliente y la integración con `ip-api.com` (con soporte para resolver localhost al IP del servidor como fallback de dev), se extrae la ciudad, país y coordenadas geográficas.
   * **Visualización Interactiva**: Se dispone de una pantalla exclusiva (`/login-history`) en el frontend que integra tarjetas individuales y mapas en miniatura (`react-leaflet`). Se incluyó un modal para ampliar dicho mapa por evento, para que el usuario identifique fácil e interactivamente accesos no autorizados.
 * **Logging de Servidor**: Usando `winston`, logs asíncronos en consola estandarizados marcan timestamps en eventos críticos tales como `AUTH_INVALID_TOTP` ó `USER_MFA_ACTIVATED`. 
+
+## 🛡️ CORS Dinámico y Multi-Tenancy
+
+Para salvaguardar la arquitectura de múltiples clientes, NexusAuth no utiliza un CORS abierto. 
+En cambio, emplea una **validación en dos capas**:
+1. **Capa HTTP (Preflight)**: El middleware de `cors` consulta la base de datos en tiempo real. Solo si el `Origin` solicitante está en la lista blanca de *algún* cliente de la plataforma, la conexión se permite. Las llamadas Server-to-Server sin cabecera de Origin también son permitidas en esta capa.
+2. **Capa Lógica (Middleware de Auth)**: Incluso superando la capa de red HTTP, el `clientAuthMiddleware` verifica que el `Origin` pertenezca específicamente a la lista `allowedOrigins` del cliente exacto del que se proveyó la llave (`x-api-key`).
 
 ## 🚀 Guía de Migración de Base de Datos (Nuevo Entorno)
 

@@ -9,33 +9,43 @@ export class RecoveryController {
         try {
             const { email } = req.body;
             if (!email) {
-                res.status(400).json({ error: 'Email is required' });
+                res.status(400).json({ error: 'El correo electrónico es requerido' });
                 return;
             }
 
             // Await is handled inside, but we always return 200 so we do not
             // expose whether the email exists in the database.
-            await recoveryService.sendRecoveryEmail(email);
+            const clientId = req.client!.id;
+            await recoveryService.sendRecoveryEmail(email, clientId);
 
-            res.status(200).json({ message: 'If the email exists, a recovery link has been sent' });
+            res.status(200).json({ message: 'Si el correo existe, se ha enviado un enlace de recuperación' });
         } catch (error: any) {
             logger.error(`Recovery Email Error: ${error.message}`);
-            res.status(500).json({ error: 'Internal server error' });
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 
+    /**
+     * Restablece la contraseña utilizando el token provisto.
+     * @param req - Objeto de solicitud Express con token y newPassword en el body.
+     * @param res - Objeto de respuesta Express.
+     */
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { token, newPassword } = req.body;
             if (!token || !newPassword) {
-                res.status(400).json({ error: 'Token and new password are required' });
+                res.status(400).json({ error: 'El token y la nueva contraseña son requeridos' });
                 return;
             }
 
-            const result = await recoveryService.resetPassword(token, newPassword);
+            const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || req.ip;
+            const userAgent = req.headers['user-agent'];
+
+            const result = await recoveryService.resetPassword(token, newPassword, { ipAddress, userAgent });
             res.status(200).json(result);
-        } catch (error: any) {
-            res.status(400).json({ error: error.message || 'Error occurred during reset password' });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Ocurrió un error al restablecer la contraseña';
+            res.status(400).json({ error: message });
         }
     }
 }

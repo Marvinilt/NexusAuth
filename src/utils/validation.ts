@@ -5,17 +5,17 @@ export const validateEmail = (email: string): boolean => {
 
 export const validatePasswordComplexity = (password: string): { valid: boolean; message?: string } => {
     if (password.length < 12) {
-        return { valid: false, message: 'Password must be at least 12 characters long.' };
+        return { valid: false, message: 'La contraseña debe tener al menos 12 caracteres.' };
     }
 
     const hasNumber = /\d/.test(password);
     if (!hasNumber) {
-        return { valid: false, message: 'Password must contain at least 1 number.' };
+        return { valid: false, message: 'La contraseña debe contener al menos 1 número.' };
     }
 
     const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     if (!hasSymbol) {
-        return { valid: false, message: 'Password must contain at least 1 symbol.' };
+        return { valid: false, message: 'La contraseña debe contener al menos 1 símbolo especial.' };
     }
 
     return { valid: true };

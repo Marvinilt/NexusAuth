@@ -4,6 +4,7 @@ interface User {
     id: string;
     email: string;
     lastLoginAt?: string;
+    isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
     const context = useContext(AuthContext);
     if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
+        throw new Error('useAuth debe ser usado dentro de un AuthProvider');
     }
     return context;
 }
