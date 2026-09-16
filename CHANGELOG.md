@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-15
+
+### Added
+- **Módulo Administrativo de Directorio y Gestión de Usuarios (`UsersPage.tsx`):**
+  - Nueva sección en el panel administrativo accesible directamente debajo de "Clientes" en el menú lateral.
+  - Filtro superior por sistema cliente (`Todos los Clientes` o selector específico).
+  - Buscador predictivo en tiempo real por correo electrónico con botón de limpieza rápida y selector de límite de visualización (50, 100 o 200 usuarios).
+  - Listado ordenado de forma descendente por fecha de creación (usuarios más recientes primero).
+  - Inspección de metadatos del usuario: ID truncado con copia rápida, sistema cliente vinculado, tipo de registro (Contraseña estándar y/o proveedores OAuth2 como Google, GitHub, Facebook), estado de MFA (insignia visual Activo/Inactivo), fecha de registro y último inicio de sesión exitoso (`lastLoginAt`).
+  - **Función de Reseteo de MFA para Recuperación de Acceso:**
+    - Botón de acción rápida "Reiniciar MFA" visible exclusivamente para usuarios con segundo factor activado.
+    - Modal interactivo de confirmación con advertencia de seguridad para evitar reseteos accidentales.
+    - Actualización optimista instantánea en el estado de la interfaz tras la confirmación exitosa.
+- **Nuevos Endpoints de Backend para Usuarios y Reseteo MFA:**
+  - `GET /admin/users`: Consulta paginada y filtrada con exclusión estricta de campos confidenciales (`passwordHash`, `mfaSecret`) y cálculo del último login.
+  - `POST /admin/users/:id/reset-mfa`: Endpoint para restablecer `mfaEnabled: false` y `mfaSecret: null`, registrando la operación en los logs de auditoría.
+- **Pruebas Unitarias Automatizadas:**
+  - Suite de tests en `tests/admin.test.ts` que valida el control de acceso y rechazo de usuarios regulares (403 Forbidden) y autorización de Super Administradores en las rutas `/admin/users` y `/admin/users/:id/reset-mfa`.
+
+### Changed
+- **Estabilidad de Proceso y Reinicio en Desarrollo (`package.json` & `src/index.ts`):**
+  - Configuración de `nodemon` ignorando rutas `logs/*` y `tests/*` con debounce de 1000ms para evitar reinicios en cascada por escritura de logs de Winston en Windows.
+  - Manejo universal de señales de apagado (`SIGTERM`, `SIGINT`, `SIGUSR2`) con cierre controlado de conexiones y salida limpia (`exit 0`).
+
+### Security
+- **Protección con `requireSuperAdmin`:**
+  - Protección estricta en endpoints de gestión de usuarios requiriendo validación contra `SUPERADMIN_EMAIL`.
+- **Proyección de Seguridad en Prisma:**
+  - Garantía en el ORM de no transferir hashes de contraseñas ni secretos TOTP cifrados al cliente web.
+
 ## [1.2.1] - 2026-09-15
 
 ### Added

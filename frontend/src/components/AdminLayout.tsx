@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
     Building2, 
+    Users,
     BarChart3, 
     ScrollText, 
     User, 
@@ -91,6 +92,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     const navItems = [
         { path: '/admin/clients', label: 'Clientes', icon: Building2, description: 'Gestión y credenciales' },
+        { path: '/admin/users', label: 'Usuarios', icon: Users, description: 'Directorio y reseteo MFA' },
         { path: '/admin/statistics', label: 'Estadísticas', icon: BarChart3, description: 'Métricas por sistema' },
         { path: '/admin/logs', label: 'Logs de Auditoría', icon: ScrollText, description: 'Registro de accesos' },
         { path: '/dashboard', label: 'Mi Perfil (2FA)', icon: User, description: 'Configuración personal' },
