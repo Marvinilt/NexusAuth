@@ -5,25 +5,38 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)
 
-NexusAuth es un microservicio de Identidad Centralizada "Zero-Cost" construido con Node.js, Express y Prisma. Su objetivo principal es proveer opciones robustas de autenticación con componentes Open Source o de capa gratuita (Zero-Cost).
+**NexusAuth** es un microservicio de Identidad Centralizada (*Identity Provider*) de arquitectura abierta y costo cero (*Zero-Cost*), diseñado para gestionar autenticación segura, control de acceso multicliente y auditoría en tiempo real.
 
-## 🚀 Descripción Funcional
+---
 
-El sistema soporta autenticación multicanal y multifactor, e incluye las siguientes características principales integradas en un solo microservicio con cliente web frontend en React:
+## 🚀 Funcionalidades Principales
 
-* **Panel de Administración Multicliente:** Consola centralizada protegida por rol de Super Administrador con menú lateral interactivo y adaptable:
-  * **Menú Lateral Colapsable:** Barra de navegación retráctil con botón de flecha (`<` / `>`) que conmuta entre modo completo (260px) y modo compacto de solo iconos (72px) con tooltips, optimizando el espacio horizontal en monitores pequeños con persistencia en `localStorage`.
-  * **Mantenimiento de Clientes (Cards Responsivas):** Listado y gestión fluida de aplicaciones cliente mediante tarjetas con glassmorphism, visualización protegida de credenciales, rotación/regeneración de API Keys, copia al portapapeles y eliminación sin desbordamientos ni scroll horizontal forzado.
-  * **Directorio y Gestión de Usuarios (`UsersPage`):** Ubicado directamente debajo de Clientes en el menú lateral. Permite auditar usuarios creados por sistema cliente o consolidados (`Todos los Clientes`), búsqueda por email en tiempo real, selector de límite (50, 100, 200), inspección de tipos de registro (Contraseña vs Social OAuth2), fecha de registro, último login y **botón de reinicio de MFA** con confirmación modal para permitir la recuperación de cuentas si el usuario extravió su dispositivo 2FA.
-  * **Dashboard de Estadísticas:** Analítica en tiempo real filtrada por cliente y rangos de fecha (hoy, 7 días, 30 días, manual), desglose de tipo de registro (Email vs Redes Sociales), cambios de contraseña y tasa de adopción de MFA/2FA.
-  * **Logs de Auditoría Multicliente con Mapas Interactivos:** Auditoría completa de accesos con selector de cliente, buscador por email de usuario, filtrado por estado y visualización geográfica interactiva: al hacer clic en cualquier ubicación se despliega un mapa modal interactivo (Leaflet + OpenStreetMap) con coordenadas, marcador y metadatos de auditoría en tiempo real.
-* **Multi-Cliente (Multi-Tenant):** Soporte total para registrar y aislar independientemente múltiples sistemas clientes a través de `API Keys` y listas blancas dinámicas (CORS Whitelisting) por cliente. Un mismo correo electrónico puede coexistir en múltiples sistemas clientes sin colisión.
-* **Auditoría de Contraseñas:** Control de fecha de último cambio de contraseña (`passwordChangedAt`) y bitácora detallada de cambios (`PasswordChangeLog`).
-* **Login Local:** Autenticación con Email/Password, encripción con Bcrypt y JWT.
-* **Integración Social (OAuth2):** Soporte para Google, Facebook y GitHub. 
-* **MFA (Zero-Cost TOTP):** App Authenticator (Google Authenticator / Authy) con códigos de recuperación. Secretos cifrados con AES-256-GCM.
-* **Account Recovery:** Enlaces de reseteo de contraseña enviados por correo vía Resend. Expiración de 15 minutos en los tokens.
-* **Monitoreo de Auditoría:** Histórico de accesos de sesión (exitosos y fallidos) incluyendo geolocalización basada en la dirección IP del usuario, con representación visual en mapas integrados (React Leaflet).
+* **Autenticación Flexible y Multicanal:** Login tradicional (Email/Contraseña cifrado con Bcrypt y JWT) e integración social vía OAuth2 (Google, GitHub y Facebook).
+* **Seguridad Avanzada y MFA (2FA):** Doble factor de autenticación TOTP (Google Authenticator / Authy con secretos cifrados en AES-256-GCM), códigos de respaldo y recuperación de contraseña vía correo electrónico.
+* **Arquitectura Multicliente (Multi-Tenant):** Aislamiento y conexión de múltiples aplicaciones cliente a través de `API Keys` y listas blancas CORS independientes.
+* **Consola de Super Administrador:** Panel de control web completo para la administración del ecosistema:
+  * **Gestión de Clientes:** Mantenimiento de aplicaciones conectadas y rotación de credenciales.
+  * **Directorio de Usuarios:** Búsqueda en tiempo real, auditoría de cuentas y reinicio remoto de MFA para recuperación de acceso.
+  * **Analítica en Tiempo Real:** Métricas de adopción de 2FA, tipos de registro y tasas de éxito en accesos por cliente y rangos de fecha.
+  * **Auditoría con Mapas Interactivos:** Bitácora de accesos con geolocalización IP representada en mapas interactivos Leaflet / OpenStreetMap.
+
+---
+
+## 📸 Capturas de Pantalla
+
+### Inicio de Sesión
+![Pantalla de Inicio de Sesión](docs/screenshots/login.png)
+
+### Consola Administrativa — Mantenimiento de Clientes
+![Consola Administrativa - Clientes](docs/screenshots/admin_dashboard.png)
+
+### Directorio de Usuarios y Reinicio de MFA
+![Directorio de Usuarios](docs/screenshots/admin_users.png)
+
+### Métricas y Analítica del Sistema
+![Estadísticas del Sistema](docs/screenshots/admin_stats.png)
+
+---
 
 ## 🛠️ Stack Tecnológico
 
