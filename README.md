@@ -96,14 +96,15 @@ GITHUB_CALLBACK_URL="http://localhost:3000/auth/github/callback"
    ```bash
    git clone <repo-url>
    cd NexusAuth
-   npm install
    ```
-2. Inicializa las tablas de la base de datos a través de Prisma:
+2. Inicializa el backend e instala dependencias:
    ```bash
+   cd backend
+   npm install
    npx prisma generate
    npx prisma db push
    ```
-3. (Opcional) Genera datos ficticios multicliente para pruebas de clientes, estadísticas y logs:
+3. (Opcional) Genera datos ficticios multicliente para pruebas de clientes, estadísticas y logs (estando en la carpeta backend):
    ```bash
    npm run seed:demo
    ```
@@ -114,6 +115,7 @@ Para iniciar el ambiente en modo de desarrollo:
 
 **Terminal Backend:**
 ```bash
+cd backend
 npm run dev
 ```
 Levantará el servidor API REST por defecto en `http://localhost:3000`.
